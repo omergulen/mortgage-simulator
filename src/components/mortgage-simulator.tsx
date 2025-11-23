@@ -33,12 +33,12 @@ export function MortgageSimulator() {
   const [importText, setImportText] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
 
-  // Check for old scenarios on mount
+  // Check for old scenarios on mount (one-time initialization)
   useEffect(() => {
     if (hasOldScenarios() && scenarios.length === 0) {
       setShowMigrationDialog(true)
     }
-  }, [scenarios.length])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleMigrate = () => {
     const oldScenarios = migrateOldScenarios()
