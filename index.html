@@ -1,163 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mortgage Scenario Comparator</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🏠 Mortgage Scenario Comparator</h1>
-            <p class="subtitle">Compare mortgage offers with detailed amortization and ETF optimization</p>
-            <div class="global-config">
-                <label>
-                    <strong>Time Horizon:</strong>
-                    <select id="horizon-select">
-                        <option value="10">10 years</option>
-                        <option value="20" selected>20 years</option>
-                        <option value="30">30 years</option>
-                    </select>
-                </label>
-                <label>
-                    <strong>Tax-Gain Harvesting Strategy:</strong>
-                    <select id="harvesting-strategy">
-                        <option value="none">No Harvesting (Tax at End)</option>
-                        <option value="full">Full Buy/Sell Every Year</option>
-                        <option value="partial">Partial Harvest (Tax-Free Limit Only)</option>
-                        <option value="optimal" selected>Optimal Harvest (Best Strategy)</option>
-                    </select>
-                </label>
-            </div>
-            <div class="strategy-info" id="strategy-info">
-                <p><strong>Strategy Info:</strong> <span id="strategy-description"></span></p>
-            </div>
-        </header>
-
-        <div class="main-content">
-            <!-- Add Scenario Button -->
-            <section class="card" style="text-align: center; padding: 1rem;">
-                <button type="button" class="btn btn-primary" id="add-scenario-btn" onclick="openAddModal()">
-                    ➕ Add New Scenario
-                </button>
-            </section>
-
-            <!-- Modal for Add/Edit Scenario -->
-            <div id="scenario-modal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 id="modal-title">Add Mortgage Scenario</h2>
-                        <button class="modal-close" onclick="closeModal('scenario-modal')">&times;</button>
-                    </div>
-                    <form id="scenario-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="scenario-name">Scenario Name</label>
-                            <input type="text" id="scenario-name" placeholder="e.g., 306k MBS Interhyp" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="loan-amount">Loan Amount (€)</label>
-                            <input type="text" id="loan-amount" placeholder="306000 or 306.000,00 or 306,000.50" required>
-                            <small class="input-hint">Accepts: 306000, 306.000,50, 306,000.50, 306 000,50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="interest-rate">Interest Rate (% p.a.)</label>
-                            <input type="text" id="interest-rate" placeholder="3.51 or 3,51" required>
-                            <small class="input-hint">Accepts: 3.51 or 3,51</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="monthly-payment">Monthly Payment (€)</label>
-                            <input type="text" id="monthly-payment" placeholder="1500 or 1.500,00" required>
-                            <small class="input-hint">Accepts: 1500, 1.500,50, 1,500.50, 1 500,50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="extra-yearly">Extra Yearly Payment (€)</label>
-                            <input type="text" id="extra-yearly" placeholder="2000 or 2.000,00" value="0">
-                            <small class="input-hint">Accepts: 2000, 2.000,50, 2,000.50, 2 000,50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="property-value">Property Value (€)</label>
-                            <input type="text" id="property-value" placeholder="400000 or 400.000,00" required>
-                            <small class="input-hint">Accepts: 400000, 400.000,50, 400,000.50, 400 000,50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="initial-etf">Initial ETF Investment (€)</label>
-                            <input type="text" id="initial-etf" placeholder="0" value="0">
-                            <small class="input-hint">Accepts: 0, 1000, 1.000,50, 1,000.50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="monthly-etf">Monthly ETF Contribution (€)</label>
-                            <input type="text" id="monthly-etf" placeholder="0" value="0">
-                            <small class="input-hint">Accepts: 0, 500, 500,50, 500.50</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="etf-return">ETF Expected Return (% p.a.)</label>
-                            <input type="text" id="etf-return" placeholder="7.0 or 7,0" value="7.0">
-                            <small class="input-hint">Accepts: 7.0 or 7,0</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="inflation">Inflation Rate (% p.a.)</label>
-                            <input type="text" id="inflation" placeholder="2.0 or 2,0" value="2.0">
-                            <small class="input-hint">Accepts: 2.0 or 2,0</small>
-                        </div>
-                    </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" id="submit-btn">Add Scenario</button>
-                            <button type="button" class="btn btn-secondary" onclick="closeModal('scenario-modal')">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Comparison Table -->
-            <section class="card" id="comparison-section" style="display: none;">
-                <h2>Scenario Comparison</h2>
-                <div class="table-container">
-                    <table id="comparison-table">
-                        <thead id="comparison-header">
-                        </thead>
-                        <tbody id="comparison-body">
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Detailed View Section -->
-            <section class="card" id="detailed-view-section" style="display: none;">
-                <h2>Detailed Scenario Analysis</h2>
-                <div class="scenario-selector">
-                    <label for="detail-scenario-select">Select Scenario:</label>
-                    <select id="detail-scenario-select">
-                        <option value="">-- Select a scenario --</option>
-                    </select>
-                    <div class="scenario-actions" id="scenario-actions" style="display: none;">
-                        <button type="button" class="btn btn-secondary" onclick="editSelectedScenario()">✏️ Edit</button>
-                        <button type="button" class="btn btn-secondary" onclick="duplicateSelectedScenario()">📋 Duplicate</button>
-                        <button type="button" class="btn btn-secondary" onclick="deleteSelectedScenario()">🗑️ Delete</button>
-                    </div>
-                </div>
-                <div id="detailed-results"></div>
-            </section>
-
-            <!-- Charts Section -->
-            <section class="card" id="charts-section" style="display: none;">
-                <h2>Visualizations</h2>
-                <div class="charts-container">
-                    <div class="chart-wrapper">
-                        <canvas id="balance-chart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="networth-chart"></canvas>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
-
-    <script src="mortgage-calculator.js"></script>
-    <script src="app.js"></script>
-</body>
+    <script>
+      // Apply theme immediately to prevent flash
+      (function() {
+        const stored = localStorage.getItem('mortgage-simulator-theme');
+        const theme = stored || 'system';
+        let effectiveTheme;
+        if (theme === 'system') {
+          effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        } else {
+          effectiveTheme = theme;
+        }
+        if (effectiveTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
-
