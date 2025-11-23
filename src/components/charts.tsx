@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
-import { MortgageCalculator } from '@/lib/mortgage-calculator'
+import { MortgageCalculator, type ComparisonResult } from '@/lib/mortgage-calculator'
 import {
   LineChart,
   Line,
@@ -13,21 +13,33 @@ import {
 } from 'recharts'
 
 interface ChartsProps {
-  comparisons: any[]
+  comparisons: ComparisonResult[]
+}
+
+interface ChartDataEntry {
+  year: number
+  [key: string]: number | string
+}
+
+interface TooltipPayload {
+  name: string
+  value: number
+  color: string
 }
 
 export function Charts({ comparisons }: ChartsProps) {
   const { horizonYears, harvestingStrategy } = useMortgageStore()
 
   const balanceData = useMemo(() => {
-    const data: Array<{ year: number; [key: string]: number | string }> = []
+    const data: ChartDataEntry[] = []
 
     for (let year = 0; year <= horizonYears; year++) {
-      const entry: any = { year }
+      const entry: ChartDataEntry = { year }
       comparisons.forEach((comp) => {
         const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
         const month = year * 12
-        const scheduleEntry = amortization.schedule.find((e) => e.month === month) ||
+        const scheduleEntry =
+          amortization.schedule.find((e) => e.month === month) ||
           amortization.schedule[amortization.schedule.length - 1]
         entry[comp.name] = scheduleEntry ? scheduleEntry.balance : 0
       })
@@ -38,14 +50,15 @@ export function Charts({ comparisons }: ChartsProps) {
   }, [comparisons, horizonYears])
 
   const netWorthData = useMemo(() => {
-    const data: Array<{ year: number; [key: string]: number | string }> = []
+    const data: ChartDataEntry[] = []
 
     for (let year = 0; year <= horizonYears; year++) {
-      const entry: any = { year }
+      const entry: ChartDataEntry = { year }
       comparisons.forEach((comp) => {
         const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
         const month = year * 12
-        const scheduleEntry = amortization.schedule.find((e) => e.month === month) ||
+        const scheduleEntry =
+          amortization.schedule.find((e) => e.month === month) ||
           amortization.schedule[amortization.schedule.length - 1]
         const balance = scheduleEntry ? scheduleEntry.balance : 0
         const equity = comp.propertyValue - balance
@@ -81,15 +94,16 @@ export function Charts({ comparisons }: ChartsProps) {
   }
 
   // Custom tooltip component with proper styling
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload.length) return null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const CustomTooltip = (props: any) => {
+    if (!props.active || !props.payload || !props.payload.length) return null
 
     return (
       <div className="rounded-lg border bg-popover p-3 shadow-lg z-50">
-        <p className="font-semibold mb-2 text-popover-foreground">{`Year ${label}`}</p>
-        {payload.map((entry: any, idx: number) => (
+        <p className="font-semibold mb-2 text-popover-foreground">{`Year ${props.label}`}</p>
+        {props.payload.map((entry: TooltipPayload, idx: number) => (
           <p key={idx} className="text-sm text-popover-foreground" style={{ color: entry.color }}>
-            {`${entry.name}: ${formatCurrency(entry.value as number)}`}
+            {`${entry.name}: ${formatCurrency(entry.value)}`}
           </p>
         ))}
       </div>
@@ -97,12 +111,13 @@ export function Charts({ comparisons }: ChartsProps) {
   }
 
   // Custom legend component
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderCustomLegend = (props: any) => {
-    const { payload } = props
+    const payload = props.payload as Array<{ value: string; color: string }> | undefined
     if (!payload || payload.length === 0) return null
     return (
       <div className="flex flex-wrap gap-4 justify-center mt-6 mb-2">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
               className="w-3 h-3 rounded-full flex-shrink-0"
@@ -121,26 +136,29 @@ export function Charts({ comparisons }: ChartsProps) {
         <h3 className="text-lg font-semibold text-foreground">Loan Balance Over Time</h3>
         <div className="relative pb-8">
           <ResponsiveContainer width="100%" height={800}>
-            <LineChart
-              data={balanceData}
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                opacity={0.3}
-              />
+            <LineChart data={balanceData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="year"
                 stroke="hsl(var(--muted-foreground))"
                 tick={{ fill: 'hsl(var(--foreground))' }}
-                label={{ value: 'Years', position: 'insideBottom', offset: -5, fill: 'hsl(var(--foreground))' }}
+                label={{
+                  value: 'Years',
+                  position: 'insideBottom',
+                  offset: -5,
+                  fill: 'hsl(var(--foreground))',
+                }}
               />
               <YAxis
                 tickFormatter={formatCurrency}
                 stroke="hsl(var(--muted-foreground))"
                 tick={{ fill: 'hsl(var(--foreground))' }}
-                label={{ value: 'Balance (€)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--foreground))' }}
+                label={{
+                  value: 'Balance (€)',
+                  angle: -90,
+                  position: 'insideLeft',
+                  fill: 'hsl(var(--foreground))',
+                }}
               />
               <Tooltip
                 content={<CustomTooltip />}
@@ -168,26 +186,29 @@ export function Charts({ comparisons }: ChartsProps) {
         <h3 className="text-lg font-semibold text-foreground">Net Worth Over Time</h3>
         <div className="relative pb-8">
           <ResponsiveContainer width="100%" height={800}>
-            <LineChart
-              data={netWorthData}
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                opacity={0.3}
-              />
+            <LineChart data={netWorthData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="year"
                 stroke="hsl(var(--muted-foreground))"
                 tick={{ fill: 'hsl(var(--foreground))' }}
-                label={{ value: 'Years', position: 'insideBottom', offset: -5, fill: 'hsl(var(--foreground))' }}
+                label={{
+                  value: 'Years',
+                  position: 'insideBottom',
+                  offset: -5,
+                  fill: 'hsl(var(--foreground))',
+                }}
               />
               <YAxis
                 tickFormatter={formatCurrency}
                 stroke="hsl(var(--muted-foreground))"
                 tick={{ fill: 'hsl(var(--foreground))' }}
-                label={{ value: 'Net Worth (€)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--foreground))' }}
+                label={{
+                  value: 'Net Worth (€)',
+                  angle: -90,
+                  position: 'insideLeft',
+                  fill: 'hsl(var(--foreground))',
+                }}
               />
               <Tooltip
                 content={<CustomTooltip />}
@@ -213,4 +234,3 @@ export function Charts({ comparisons }: ChartsProps) {
     </div>
   )
 }
-

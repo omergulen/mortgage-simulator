@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
-import { MortgageCalculator, type Scenario } from '@/lib/mortgage-calculator'
+import { MortgageCalculator, type ComparisonResult } from '@/lib/mortgage-calculator'
 import {
   Select,
   SelectContent,
@@ -12,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface DetailedViewProps {
-  comparisons: any[]
+  comparisons: ComparisonResult[]
   onEdit?: (id: string) => void
 }
 
@@ -88,18 +87,10 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit?.(scenario.id)}
-          >
+          <Button variant="outline" size="sm" onClick={() => onEdit?.(scenario.id)}>
             ✏️ Edit
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => duplicateScenario(scenario.id)}
-          >
+          <Button variant="outline" size="sm" onClick={() => duplicateScenario(scenario.id)}>
             📋 Duplicate
           </Button>
           <Button
@@ -124,20 +115,44 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <MetricItem label="Loan Amount" value={MortgageCalculator.formatCurrency(scenario.loanAmount)} />
-            <MetricItem label="Interest Rate" value={MortgageCalculator.formatPercent(scenario.interestRate)} />
-            <MetricItem label="Monthly Payment" value={MortgageCalculator.formatCurrency(scenario.monthlyPayment)} />
-            <MetricItem label="Extra Yearly Payment" value={MortgageCalculator.formatCurrency(scenario.extraYearly || 0)} />
-            <MetricItem label="Years to Payoff" value={`${scenario.payoffYears.toFixed(1)} years`} />
-            <MetricItem label="Total Extra Payments" value={MortgageCalculator.formatCurrency(amortization.totalExtra)} />
+            <MetricItem
+              label="Loan Amount"
+              value={MortgageCalculator.formatCurrency(scenario.loanAmount)}
+            />
+            <MetricItem
+              label="Interest Rate"
+              value={MortgageCalculator.formatPercent(scenario.interestRate)}
+            />
+            <MetricItem
+              label="Monthly Payment"
+              value={MortgageCalculator.formatCurrency(scenario.monthlyPayment)}
+            />
+            <MetricItem
+              label="Extra Yearly Payment"
+              value={MortgageCalculator.formatCurrency(scenario.extraYearly || 0)}
+            />
+            <MetricItem
+              label="Years to Payoff"
+              value={`${scenario.payoffYears.toFixed(1)} years`}
+            />
+            <MetricItem
+              label="Total Extra Payments"
+              value={MortgageCalculator.formatCurrency(amortization.totalExtra)}
+            />
 
             {horizonYears >= 10 && (
               <>
-                <MetricItem label="Remaining at 10 years" value={MortgageCalculator.formatCurrency(scenario.balance10y)} />
-                <MetricItem label="Total Paid (10y)" value={MortgageCalculator.formatCurrency(scenario.totalPaid10y)} />
+                <MetricItem
+                  label="Remaining at 10 years"
+                  value={MortgageCalculator.formatCurrency(scenario.balance10y ?? 0)}
+                />
+                <MetricItem
+                  label="Total Paid (10y)"
+                  value={MortgageCalculator.formatCurrency(scenario.totalPaid10y ?? 0)}
+                />
                 <MetricItem
                   label="Total Interest (10y)"
-                  value={MortgageCalculator.formatCurrency(scenario.totalInterest10y)}
+                  value={MortgageCalculator.formatCurrency(scenario.totalInterest10y ?? 0)}
                   negative
                 />
               </>
@@ -145,11 +160,17 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
 
             {horizonYears >= 20 && (
               <>
-                <MetricItem label="Remaining at 20 years" value={MortgageCalculator.formatCurrency(scenario.balance20y)} />
-                <MetricItem label="Total Paid (20y)" value={MortgageCalculator.formatCurrency(scenario.totalPaid20y)} />
+                <MetricItem
+                  label="Remaining at 20 years"
+                  value={MortgageCalculator.formatCurrency(scenario.balance20y ?? 0)}
+                />
+                <MetricItem
+                  label="Total Paid (20y)"
+                  value={MortgageCalculator.formatCurrency(scenario.totalPaid20y ?? 0)}
+                />
                 <MetricItem
                   label="Total Interest (20y)"
-                  value={MortgageCalculator.formatCurrency(scenario.totalInterest20y)}
+                  value={MortgageCalculator.formatCurrency(scenario.totalInterest20y ?? 0)}
                   negative
                 />
               </>
@@ -157,11 +178,17 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
 
             {horizonYears >= 30 && (
               <>
-                <MetricItem label="Remaining at 30 years" value={MortgageCalculator.formatCurrency(scenario.balance30y)} />
-                <MetricItem label="Total Paid (30y)" value={MortgageCalculator.formatCurrency(scenario.totalPaid30y)} />
+                <MetricItem
+                  label="Remaining at 30 years"
+                  value={MortgageCalculator.formatCurrency(scenario.balance30y ?? 0)}
+                />
+                <MetricItem
+                  label="Total Paid (30y)"
+                  value={MortgageCalculator.formatCurrency(scenario.totalPaid30y ?? 0)}
+                />
                 <MetricItem
                   label="Total Interest (30y)"
-                  value={MortgageCalculator.formatCurrency(scenario.totalInterest30y)}
+                  value={MortgageCalculator.formatCurrency(scenario.totalInterest30y ?? 0)}
                   negative
                 />
               </>
@@ -177,18 +204,23 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <MetricItem label="Property Value" value={MortgageCalculator.formatCurrency(scenario.propertyValue)} />
+            <MetricItem
+              label="Property Value"
+              value={MortgageCalculator.formatCurrency(scenario.propertyValue)}
+            />
 
             {horizonYears >= 10 && (
               <>
                 <MetricItem
                   label="Equity at 10 years"
-                  value={MortgageCalculator.formatCurrency(scenario.equity10y)}
+                  value={MortgageCalculator.formatCurrency(scenario.equity10y ?? 0)}
                   positive
                 />
                 <MetricItem
                   label="Loan-to-Value (10y)"
-                  value={MortgageCalculator.formatPercent((scenario.balance10y / scenario.propertyValue) * 100)}
+                  value={MortgageCalculator.formatPercent(
+                    ((scenario.balance10y ?? 0) / scenario.propertyValue) * 100
+                  )}
                 />
               </>
             )}
@@ -197,12 +229,14 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
               <>
                 <MetricItem
                   label="Equity at 20 years"
-                  value={MortgageCalculator.formatCurrency(scenario.equity20y)}
+                  value={MortgageCalculator.formatCurrency(scenario.equity20y ?? 0)}
                   positive
                 />
                 <MetricItem
                   label="Loan-to-Value (20y)"
-                  value={MortgageCalculator.formatPercent((scenario.balance20y / scenario.propertyValue) * 100)}
+                  value={MortgageCalculator.formatPercent(
+                    ((scenario.balance20y ?? 0) / scenario.propertyValue) * 100
+                  )}
                 />
               </>
             )}
@@ -211,12 +245,14 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
               <>
                 <MetricItem
                   label="Equity at 30 years"
-                  value={MortgageCalculator.formatCurrency(scenario.equity30y)}
+                  value={MortgageCalculator.formatCurrency(scenario.equity30y ?? 0)}
                   positive
                 />
                 <MetricItem
                   label="Loan-to-Value (30y)"
-                  value={MortgageCalculator.formatPercent((scenario.balance30y / scenario.propertyValue) * 100)}
+                  value={MortgageCalculator.formatPercent(
+                    ((scenario.balance30y ?? 0) / scenario.propertyValue) * 100
+                  )}
                 />
               </>
             )}
@@ -231,14 +267,27 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <MetricItem label="Initial Investment" value={MortgageCalculator.formatCurrency(scenario.initialETF || 0)} />
-            <MetricItem label="Monthly Contribution" value={MortgageCalculator.formatCurrency(scenario.monthlyETF || 0)} />
-            <MetricItem label="Expected Return" value={MortgageCalculator.formatPercent(scenario.etfReturn || 7.0)} />
+            <MetricItem
+              label="Initial Investment"
+              value={MortgageCalculator.formatCurrency(scenario.initialETF || 0)}
+            />
+            <MetricItem
+              label="Monthly Contribution"
+              value={MortgageCalculator.formatCurrency(scenario.monthlyETF || 0)}
+            />
+            <MetricItem
+              label="Expected Return"
+              value={MortgageCalculator.formatPercent(scenario.etfReturn || 7.0)}
+            />
             <MetricItem
               label={`Future Value (${horizonYears}y)`}
               value={MortgageCalculator.formatCurrency(etfResult.futureValue)}
             />
-            <MetricItem label="Total Gains" value={MortgageCalculator.formatCurrency(etfResult.gains)} positive />
+            <MetricItem
+              label="Total Gains"
+              value={MortgageCalculator.formatCurrency(etfResult.gains)}
+              positive
+            />
             <MetricItem
               label="Tax Paid During Years"
               value={MortgageCalculator.formatCurrency(etfResult.tax || 0)}
@@ -286,10 +335,7 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
               </thead>
               <tbody>
                 {amortization.schedule.map((entry, idx) => (
-                  <tr
-                    key={idx}
-                    className={idx % 2 === 0 ? 'bg-card' : 'bg-background'}
-                  >
+                  <tr key={idx} className={idx % 2 === 0 ? 'bg-card' : 'bg-background'}>
                     <td className="px-4 py-2">{entry.year}</td>
                     <td className="px-4 py-2">{entry.month}</td>
                     <td className="px-4 py-2 text-right">
@@ -339,8 +385,8 @@ function MetricItem({
           positive
             ? 'text-green-600 dark:text-green-400'
             : negative
-            ? 'text-red-600 dark:text-red-400'
-            : ''
+              ? 'text-red-600 dark:text-red-400'
+              : ''
         } ${bold ? 'font-bold' : ''}`}
       >
         {value}
@@ -348,4 +394,3 @@ function MetricItem({
     </div>
   )
 }
-

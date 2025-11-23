@@ -36,55 +36,49 @@ export const useMortgageStore = create<MortgageState>()(
       sortDirection: null,
       visibleColumns: {},
       columnOrder: [],
-      
+
       addScenario: (scenario) =>
         set((state) => ({
           scenarios: [...state.scenarios, scenario],
         })),
-      
+
       updateScenario: (id, updates) =>
         set((state) => ({
-          scenarios: state.scenarios.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-          ),
+          scenarios: state.scenarios.map((s) => (s.id === id ? { ...s, ...updates } : s)),
         })),
-      
+
       deleteScenario: (id) =>
         set((state) => ({
           scenarios: state.scenarios.filter((s) => s.id !== id),
-          selectedScenarioId:
-            state.selectedScenarioId === id ? null : state.selectedScenarioId,
+          selectedScenarioId: state.selectedScenarioId === id ? null : state.selectedScenarioId,
         })),
-      
+
       duplicateScenario: (id) =>
         set((state) => {
           const scenario = state.scenarios.find((s) => s.id === id)
           if (!scenario) return state
-          
+
           const duplicated: Scenario = {
             ...scenario,
             id: crypto.randomUUID(),
             name: `${scenario.name} (Copy)`,
           }
-          
+
           return {
             scenarios: [...state.scenarios, duplicated],
           }
         }),
-      
+
       setHorizonYears: (years) => set({ horizonYears: years }),
       setHarvestingStrategy: (strategy) => set({ harvestingStrategy: strategy }),
       setSelectedScenarioId: (id) => set({ selectedScenarioId: id }),
-      setSort: (column, direction) =>
-        set({ sortColumn: column, sortDirection: direction }),
+      setSort: (column, direction) => set({ sortColumn: column, sortDirection: direction }),
       setColumnVisibility: (column, visible) =>
         set((state) => ({
           visibleColumns: { ...state.visibleColumns, [column]: visible },
         })),
-      setColumnOrder: (order) =>
-        set({ columnOrder: order }),
-      resetColumnVisibility: () =>
-        set({ visibleColumns: {}, columnOrder: [] }),
+      setColumnOrder: (order) => set({ columnOrder: order }),
+      resetColumnVisibility: () => set({ visibleColumns: {}, columnOrder: [] }),
       clearAll: () =>
         set({
           scenarios: [],
@@ -101,4 +95,3 @@ export const useMortgageStore = create<MortgageState>()(
     }
   )
 )
-

@@ -92,4 +92,3 @@ export function useTheme() {
     effectiveTheme: getEffectiveTheme(theme),
   }
 }
-

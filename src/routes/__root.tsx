@@ -8,7 +8,9 @@ export const Route = createRootRoute({
       const theme = stored || 'system'
       let effectiveTheme: 'light' | 'dark'
       if (theme === 'system') {
-        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
       } else {
         effectiveTheme = theme as 'light' | 'dark'
       }
@@ -21,4 +23,3 @@ export const Route = createRootRoute({
     return <Outlet />
   },
 })
-

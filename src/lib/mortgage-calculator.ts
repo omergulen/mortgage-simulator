@@ -1,8 +1,8 @@
 // German Tax Constants
 const TAX_CONSTANTS = {
-  TEILFREISTELLUNG: 0.30, // 30% tax-free for equity ETFs
-  TAXABLE_PORTION: 0.70,  // 70% taxable
-  TAX_RATE: 0.26375,      // 26.375% (25% + Soli)
+  TEILFREISTELLUNG: 0.3, // 30% tax-free for equity ETFs
+  TAXABLE_PORTION: 0.7, // 70% taxable
+  TAX_RATE: 0.26375, // 26.375% (25% + Soli)
   SPARER_PAUSCHBETRAG: 1000, // 1,000€ yearly tax-free allowance
 }
 
@@ -53,6 +53,32 @@ export interface ETFResult {
 
 export type HarvestingStrategy = 'none' | 'full' | 'partial' | 'optimal'
 
+export interface ComparisonResult extends Scenario {
+  payoffYears: number
+  etfDetails: ETFResult
+  balance10y?: number
+  totalPaid10y?: number
+  totalInterest10y?: number
+  equity10y?: number
+  etfValue10y?: number
+  netWorth10y?: number
+  balance20y?: number
+  totalPaid20y?: number
+  totalInterest20y?: number
+  equity20y?: number
+  etfValue20y?: number
+  netWorth20y?: number
+  balance30y?: number
+  totalPaid30y?: number
+  totalInterest30y?: number
+  equity30y?: number
+  etfValue30y?: number
+  netWorth30y?: number
+  etfValue: number
+  netWorth: number
+  [key: string]: string | number | undefined | ETFResult
+}
+
 export class MortgageCalculator {
   /**
    * Calculate monthly interest rate from annual rate
@@ -65,12 +91,7 @@ export class MortgageCalculator {
    * Calculate amortization schedule for a mortgage
    */
   static calculateAmortization(scenario: Scenario, years = 30): AmortizationResult {
-    const {
-      loanAmount,
-      interestRate,
-      monthlyPayment,
-      extraYearly = 0
-    } = scenario
+    const { loanAmount, interestRate, monthlyPayment, extraYearly = 0 } = scenario
 
     const monthlyRate = this.monthlyRate(interestRate)
     const totalMonths = years * 12
@@ -83,7 +104,7 @@ export class MortgageCalculator {
     for (let month = 1; month <= totalMonths && balance > 0.01; month++) {
       const interestPayment = balance * monthlyRate
       let principalPayment = monthlyPayment - interestPayment
-      
+
       // Apply extra yearly payment in December
       let extraPayment = 0
       if (month % 12 === 0 && extraYearly > 0) {
@@ -107,7 +128,7 @@ export class MortgageCalculator {
         interestPayment,
         principalPayment,
         extraPayment,
-        totalPayment: monthlyPayment + extraPayment
+        totalPayment: monthlyPayment + extraPayment,
       })
 
       // If balance is paid off, stop
@@ -120,7 +141,7 @@ export class MortgageCalculator {
       totalPrincipal,
       totalExtra,
       finalBalance: schedule[schedule.length - 1]?.balance || 0,
-      payoffMonths: schedule.length
+      payoffMonths: schedule.length,
     }
   }
 
@@ -130,8 +151,9 @@ export class MortgageCalculator {
   static getBalanceAtYear(scenario: Scenario, targetYear: number): number {
     const amortization = this.calculateAmortization(scenario, targetYear + 5)
     const targetMonth = targetYear * 12
-    const entry = amortization.schedule.find(e => e.month === targetMonth) ||
-                 amortization.schedule[amortization.schedule.length - 1]
+    const entry =
+      amortization.schedule.find((e) => e.month === targetMonth) ||
+      amortization.schedule[amortization.schedule.length - 1]
     return entry ? entry.balance : 0
   }
 
@@ -154,52 +176,37 @@ export class MortgageCalculator {
   /**
    * Calculate ETF future value with German tax optimization
    */
-  static calculateETF(scenario: Scenario, years: number, strategy: HarvestingStrategy = 'optimal'): ETFResult {
-    const {
-      initialETF = 0,
-      monthlyETF = 0,
-      etfReturn = 7.0,
-    } = scenario
+  static calculateETF(
+    scenario: Scenario,
+    years: number,
+    strategy: HarvestingStrategy = 'optimal'
+  ): ETFResult {
+    const { initialETF = 0, monthlyETF = 0, etfReturn = 7.0 } = scenario
 
     const monthlyReturn = etfReturn / 100 / 12
 
     switch (strategy) {
       case 'full':
-        return this.calculateETFFullHarvest(
-          initialETF,
-          monthlyETF,
-          monthlyReturn,
-          years
-        )
+        return this.calculateETFFullHarvest(initialETF, monthlyETF, monthlyReturn, years)
       case 'partial':
-        return this.calculateETFPartialHarvest(
-          initialETF,
-          monthlyETF,
-          monthlyReturn,
-          years
-        )
+        return this.calculateETFPartialHarvest(initialETF, monthlyETF, monthlyReturn, years)
       case 'optimal':
-        return this.calculateETFOptimalHarvest(
-          initialETF,
-          monthlyETF,
-          monthlyReturn,
-          years
-        )
+        return this.calculateETFOptimalHarvest(initialETF, monthlyETF, monthlyReturn, years)
       case 'none':
       default:
-        return this.calculateETFSimple(
-          initialETF,
-          monthlyETF,
-          monthlyReturn,
-          years
-        )
+        return this.calculateETFSimple(initialETF, monthlyETF, monthlyReturn, years)
     }
   }
 
   /**
    * Simple ETF calculation (one-time tax at end)
    */
-  static calculateETFSimple(initial: number, monthly: number, monthlyReturn: number, years: number): ETFResult {
+  static calculateETFSimple(
+    initial: number,
+    monthly: number,
+    monthlyReturn: number,
+    years: number
+  ): ETFResult {
     let value = initial
     const totalMonths = years * 12
 
@@ -207,9 +214,10 @@ export class MortgageCalculator {
       value = value * (1 + monthlyReturn) + monthly
     }
 
-    const gains = value - initial - (monthly * totalMonths)
+    const gains = value - initial - monthly * totalMonths
     const taxableGains = gains * TAX_CONSTANTS.TAXABLE_PORTION
-    const finalTax = Math.max(0, taxableGains - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
+    const finalTax =
+      Math.max(0, taxableGains - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
     const afterTaxValue = value - finalTax
 
     return {
@@ -220,14 +228,19 @@ export class MortgageCalculator {
       afterTaxNominal: afterTaxValue,
       afterTaxReal: afterTaxValue / Math.pow(1 + monthlyReturn * 12, years),
       finalTax,
-      strategy: 'none'
+      strategy: 'none',
     }
   }
 
   /**
    * Strategy 1: Full buy/sell every year (sell everything, rebuy)
    */
-  static calculateETFFullHarvest(initial: number, monthly: number, monthlyReturn: number, years: number): ETFResult {
+  static calculateETFFullHarvest(
+    initial: number,
+    monthly: number,
+    monthlyReturn: number,
+    years: number
+  ): ETFResult {
     let value = initial
     let costBasis = initial
     const totalMonths = years * 12
@@ -248,16 +261,17 @@ export class MortgageCalculator {
       const gains = value - costBasis
       if (gains > 0) {
         const taxableGains = gains * TAX_CONSTANTS.TAXABLE_PORTION
-        const tax = Math.max(0, taxableGains - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
+        const tax =
+          Math.max(0, taxableGains - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
         totalTaxPaid += tax
         totalHarvested += gains
-        
+
         // Reset: value stays the same (we rebuy), but cost basis resets to current value
         costBasis = value
       }
     }
 
-    const finalGains = value - initial - (monthly * totalMonths)
+    const finalGains = value - initial - monthly * totalMonths
     const afterTaxValue = value - totalTaxPaid
 
     return {
@@ -269,14 +283,19 @@ export class MortgageCalculator {
       afterTaxReal: afterTaxValue / Math.pow(1 + monthlyReturn * 12, years),
       totalHarvested,
       finalTax: 0,
-      strategy: 'full'
+      strategy: 'full',
     }
   }
 
   /**
    * Strategy 2: Partial harvest - sell only up to tax-free limit, keep rest, show final tax
    */
-  static calculateETFPartialHarvest(initial: number, monthly: number, monthlyReturn: number, years: number): ETFResult {
+  static calculateETFPartialHarvest(
+    initial: number,
+    monthly: number,
+    monthlyReturn: number,
+    years: number
+  ): ETFResult {
     let value = initial
     let costBasis = initial
     const totalMonths = years * 12
@@ -307,11 +326,12 @@ export class MortgageCalculator {
       }
     }
 
-    const finalGains = value - initial - (monthly * totalMonths)
+    const finalGains = value - initial - monthly * totalMonths
     const remainingUnrealized = finalGains - totalHarvested
     const finalTaxable = remainingUnrealized * TAX_CONSTANTS.TAXABLE_PORTION
-    const finalTax = Math.max(0, finalTaxable - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
-    
+    const finalTax =
+      Math.max(0, finalTaxable - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
+
     const afterTaxValue = value - finalTax
 
     return {
@@ -323,67 +343,66 @@ export class MortgageCalculator {
       afterTaxReal: afterTaxValue / Math.pow(1 + monthlyReturn * 12, years),
       totalHarvested,
       finalTax,
-      strategy: 'partial'
+      strategy: 'partial',
     }
   }
 
   /**
    * Strategy 3: Optimal harvest - sell optimal amount each year, keep rest, show final tax
    */
-  static calculateETFOptimalHarvest(initial: number, monthly: number, monthlyReturn: number, years: number): ETFResult {
+  static calculateETFOptimalHarvest(
+    initial: number,
+    monthly: number,
+    monthlyReturn: number,
+    years: number
+  ): ETFResult {
     let value = initial
-    let costBasis = initial
     const totalMonths = years * 12
     const monthlyContributions: Array<{ month: number; amount: number; costBasis: number }> = []
 
     // Track monthly contributions for FIFO
     for (let month = 1; month <= totalMonths; month++) {
       value = value * (1 + monthlyReturn)
-      
+
       if (monthly > 0) {
         value += monthly
         monthlyContributions.push({
           month,
           amount: monthly,
-          costBasis: monthly
+          costBasis: monthly,
         })
       }
     }
 
     // Simulate yearly harvesting
     let totalHarvested = 0
-    let remainingCostBasis = costBasis
     const contributions = [...monthlyContributions]
 
     for (let year = 1; year <= years; year++) {
       const yearEndMonth = year * 12
-      
+
       // Calculate value at year end
       let yearValue = initial
       for (let m = 1; m <= yearEndMonth; m++) {
         yearValue = yearValue * (1 + monthlyReturn)
-        const contrib = monthlyContributions.find(c => c.month === m)
+        const contrib = monthlyContributions.find((c) => c.month === m)
         if (contrib) yearValue += contrib.amount
       }
 
       // Calculate unrealized gains
       let totalCostBasis = initial
-      for (const contrib of contributions.filter(c => c.month <= yearEndMonth)) {
+      for (const contrib of contributions.filter((c) => c.month <= yearEndMonth)) {
         totalCostBasis += contrib.amount
       }
 
       const unrealizedGains = yearValue - totalCostBasis
-      
+
       // Harvest up to tax-free limit
       const maxHarvestable = TAX_CONSTANTS.SPARER_PAUSCHBETRAG / TAX_CONSTANTS.TAXABLE_PORTION
       const harvestAmount = Math.min(unrealizedGains, maxHarvestable)
-      
+
       if (harvestAmount > 0) {
         totalHarvested += harvestAmount
-        const harvestRatio = harvestAmount / unrealizedGains
-        remainingCostBasis = totalCostBasis * (1 - harvestRatio)
-      } else {
-        remainingCostBasis = totalCostBasis
       }
     }
 
@@ -391,16 +410,17 @@ export class MortgageCalculator {
     let finalValue = initial
     for (let m = 1; m <= totalMonths; m++) {
       finalValue = finalValue * (1 + monthlyReturn)
-      const contrib = monthlyContributions.find(c => c.month === m)
+      const contrib = monthlyContributions.find((c) => c.month === m)
       if (contrib) finalValue += contrib.amount
     }
 
     // Final tax calculation
-    const finalGains = finalValue - initial - (monthly * totalMonths)
+    const finalGains = finalValue - initial - monthly * totalMonths
     const remainingUnrealized = finalGains - totalHarvested
     const finalTaxable = remainingUnrealized * TAX_CONSTANTS.TAXABLE_PORTION
-    const finalTax = Math.max(0, finalTaxable - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
-    
+    const finalTax =
+      Math.max(0, finalTaxable - TAX_CONSTANTS.SPARER_PAUSCHBETRAG) * TAX_CONSTANTS.TAX_RATE
+
     const afterTaxValue = finalValue - finalTax
 
     return {
@@ -412,19 +432,23 @@ export class MortgageCalculator {
       afterTaxReal: afterTaxValue / Math.pow(1 + monthlyReturn * 12, years),
       totalHarvested,
       finalTax,
-      strategy: 'optimal'
+      strategy: 'optimal',
     }
   }
 
   /**
    * Calculate comprehensive scenario comparison
    */
-  static compareScenarios(scenarios: Scenario[], horizonYears = 20, harvestingStrategy: HarvestingStrategy = 'optimal') {
-    return scenarios.map(scenario => {
-      const result: any = {
+  static compareScenarios(
+    scenarios: Scenario[],
+    horizonYears = 20,
+    harvestingStrategy: HarvestingStrategy = 'optimal'
+  ): ComparisonResult[] {
+    return scenarios.map((scenario) => {
+      const result: Partial<ComparisonResult> = {
         ...scenario,
         payoffYears: this.getPayoffYears(scenario),
-        etfDetails: this.calculateETF(scenario, horizonYears, harvestingStrategy)
+        etfDetails: this.calculateETF(scenario, horizonYears, harvestingStrategy),
       }
 
       // Calculate metrics for all relevant years based on horizon
@@ -463,10 +487,12 @@ export class MortgageCalculator {
 
       // Set final values based on horizon
       const finalYear = horizonYears
-      result.etfValue = result.etfDetails.afterTaxValue
-      result.netWorth = result[`netWorth${finalYear}y`] || result.netWorth20y || result.netWorth10y
+      result.etfValue = result.etfDetails!.afterTaxValue
+      const netWorthKey = `netWorth${finalYear}y` as keyof ComparisonResult
+      result.netWorth =
+        (result[netWorthKey] as number) || result.netWorth20y || result.netWorth10y || 0
 
-      return result
+      return result as ComparisonResult
     })
   }
 
@@ -478,7 +504,7 @@ export class MortgageCalculator {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount)
   }
 
@@ -489,4 +515,3 @@ export class MortgageCalculator {
     return `${value.toFixed(decimals)}%`
   }
 }
-

@@ -7,25 +7,25 @@
  */
 export function parseNumber(value: string | number | undefined | null): number {
   if (!value || value === '') return 0
-  
+
   // Convert to string and trim
   let cleaned = value.toString().trim()
-  
+
   // Check if it's empty after trimming
   if (cleaned === '') return 0
-  
+
   // Remove all spaces (thousands separator)
   cleaned = cleaned.replace(/\s/g, '')
-  
+
   // Determine format by checking for comma and period
   const hasComma = cleaned.includes(',')
   const hasPeriod = cleaned.includes('.')
-  
+
   if (hasComma && hasPeriod) {
     // Both comma and period: determine which is decimal separator
     const lastComma = cleaned.lastIndexOf(',')
     const lastPeriod = cleaned.lastIndexOf('.')
-    
+
     if (lastComma > lastPeriod) {
       // Comma is decimal separator (European: 1.000,50)
       cleaned = cleaned.replace(/\./g, '').replace(',', '.')
@@ -54,8 +54,7 @@ export function parseNumber(value: string | number | undefined | null): number {
       cleaned = cleaned.replace(/\./g, '')
     }
   }
-  
+
   const parsed = parseFloat(cleaned)
   return isNaN(parsed) ? 0 : parsed
 }
-

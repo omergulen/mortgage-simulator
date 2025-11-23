@@ -21,13 +21,14 @@ interface ScenarioFormModalProps {
   onClose?: () => void
 }
 
-export function ScenarioFormModal({ editingScenario = null, onClose }: ScenarioFormModalProps = {}) {
+export function ScenarioFormModal({
+  editingScenario = null,
+  onClose,
+}: ScenarioFormModalProps = {}) {
   const { addScenario, updateScenario, scenarios } = useMortgageStore()
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(editingScenario?.id || null)
-  const scenarioToEdit = editingScenario
-    ? scenarios.find((s) => s.id === editingScenario.id)
-    : null
+  const scenarioToEdit = editingScenario ? scenarios.find((s) => s.id === editingScenario.id) : null
 
   const [formData, setFormData] = useState<Partial<Scenario>>(
     scenarioToEdit || {
@@ -114,13 +115,16 @@ export function ScenarioFormModal({ editingScenario = null, onClose }: ScenarioF
   }
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen)
-      if (!isOpen) {
-        resetForm()
-        onClose?.()
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen)
+        if (!isOpen) {
+          resetForm()
+          onClose?.()
+        }
+      }}
+    >
       {!editingScenario && (
         <DialogTrigger asChild>
           <Button>
@@ -131,7 +135,9 @@ export function ScenarioFormModal({ editingScenario = null, onClose }: ScenarioF
       )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingId ? 'Edit Mortgage Scenario' : 'Add Mortgage Scenario'}</DialogTitle>
+          <DialogTitle>
+            {editingId ? 'Edit Mortgage Scenario' : 'Add Mortgage Scenario'}
+          </DialogTitle>
           <DialogDescription>
             Enter the details of your mortgage scenario to compare with others.
           </DialogDescription>
@@ -230,9 +236,7 @@ export function ScenarioFormModal({ editingScenario = null, onClose }: ScenarioF
                 onChange={(e) => handleInputChange('initialETF', e.target.value)}
                 placeholder="0"
               />
-              <p className="text-xs text-muted-foreground">
-                Accepts: 0, 1000, 1.000,50, 1,000.50
-              </p>
+              <p className="text-xs text-muted-foreground">Accepts: 0, 1000, 1.000,50, 1,000.50</p>
             </div>
 
             <div className="space-y-2">
@@ -283,9 +287,3 @@ export function ScenarioFormModal({ editingScenario = null, onClose }: ScenarioF
     </Dialog>
   )
 }
-
-// Export a function to open the modal for editing
-export function openEditModal(_scenarioId: string) {
-  // This will be handled by the component itself
-}
-

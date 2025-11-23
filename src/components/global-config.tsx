@@ -1,4 +1,5 @@
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
+import { type HarvestingStrategy } from '@/lib/mortgage-calculator'
 import {
   Select,
   SelectContent,
@@ -42,7 +43,7 @@ export function GlobalConfig() {
           <label className="font-semibold">Tax-Gain Harvesting Strategy:</label>
           <Select
             value={harvestingStrategy}
-            onValueChange={(value) => setHarvestingStrategy(value as any)}
+            onValueChange={(value) => setHarvestingStrategy(value as HarvestingStrategy)}
           >
             <SelectTrigger className="w-[300px]">
               <SelectValue />
@@ -63,4 +64,3 @@ export function GlobalConfig() {
     </div>
   )
 }
-

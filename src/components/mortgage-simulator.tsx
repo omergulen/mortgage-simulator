@@ -75,9 +75,10 @@ export function MortgageSimulator() {
     }
   }
 
-  const comparisons = scenarios.length > 0
-    ? MortgageCalculator.compareScenarios(scenarios, horizonYears, harvestingStrategy)
-    : []
+  const comparisons =
+    scenarios.length > 0
+      ? MortgageCalculator.compareScenarios(scenarios, horizonYears, harvestingStrategy)
+      : []
 
   return (
     <AppLayout>
@@ -127,7 +128,9 @@ export function MortgageSimulator() {
           {scenarios.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="sticky top-0 bg-card z-10">Detailed Scenario Analysis</CardTitle>
+                <CardTitle className="sticky top-0 bg-card z-10">
+                  Detailed Scenario Analysis
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <DetailedView
@@ -175,7 +178,8 @@ export function MortgageSimulator() {
             <DialogHeader>
               <DialogTitle>Import Scenarios</DialogTitle>
               <DialogDescription>
-                Paste your exported scenarios JSON below. You can either add them to existing scenarios or replace all scenarios.
+                Paste your exported scenarios JSON below. You can either add them to existing
+                scenarios or replace all scenarios.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -200,11 +204,7 @@ export function MortgageSimulator() {
               <Button variant="outline" onClick={() => setShowImportDialog(false)}>
                 Cancel
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleImportReplace}
-                disabled={!importText.trim()}
-              >
+              <Button variant="outline" onClick={handleImportReplace} disabled={!importText.trim()}>
                 Replace All
               </Button>
               <Button onClick={handleImport} disabled={!importText.trim()}>
@@ -217,4 +217,3 @@ export function MortgageSimulator() {
     </AppLayout>
   )
 }
-

@@ -16,18 +16,18 @@ export function migrateOldScenarios(): Scenario[] {
     if (!Array.isArray(oldScenarios)) return []
 
     // Convert old format to new format
-    const migratedScenarios: Scenario[] = oldScenarios.map((old: any) => ({
-      id: old.id || crypto.randomUUID(),
-      name: old.name || 'Unnamed Scenario',
-      loanAmount: old.loanAmount || 0,
-      interestRate: old.interestRate || 0,
-      monthlyPayment: old.monthlyPayment || 0,
-      extraYearly: old.extraYearly || 0,
-      propertyValue: old.propertyValue || 0,
-      initialETF: old.initialETF || 0,
-      monthlyETF: old.monthlyETF || 0,
-      etfReturn: old.etfReturn || 7.0,
-      inflation: old.inflation || 2.0,
+    const migratedScenarios: Scenario[] = oldScenarios.map((old: Record<string, unknown>) => ({
+      id: (old.id as string) || crypto.randomUUID(),
+      name: (old.name as string) || 'Unnamed Scenario',
+      loanAmount: Number(old.loanAmount) || 0,
+      interestRate: Number(old.interestRate) || 0,
+      monthlyPayment: Number(old.monthlyPayment) || 0,
+      extraYearly: Number(old.extraYearly) || 0,
+      propertyValue: Number(old.propertyValue) || 0,
+      initialETF: Number(old.initialETF) || 0,
+      monthlyETF: Number(old.monthlyETF) || 0,
+      etfReturn: Number(old.etfReturn) || 7.0,
+      inflation: Number(old.inflation) || 2.0,
     }))
 
     return migratedScenarios
@@ -72,9 +72,9 @@ export function importScenarios(json: string): Scenario[] {
     }
 
     // Validate and convert to Scenario format
-    return data.map((item: any, index: number) => ({
-      id: item.id || crypto.randomUUID(),
-      name: item.name || `Imported Scenario ${index + 1}`,
+    return data.map((item: Record<string, unknown>, index: number) => ({
+      id: (item.id as string) || crypto.randomUUID(),
+      name: (item.name as string) || `Imported Scenario ${index + 1}`,
       loanAmount: Number(item.loanAmount) || 0,
       interestRate: Number(item.interestRate) || 0,
       monthlyPayment: Number(item.monthlyPayment) || 0,
@@ -86,7 +86,9 @@ export function importScenarios(json: string): Scenario[] {
       inflation: Number(item.inflation) || 2.0,
     }))
   } catch (error) {
-    throw new Error(`Failed to import scenarios: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `Failed to import scenarios: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
   }
 }
 
@@ -105,4 +107,3 @@ export function downloadScenarios(scenarios: Scenario[], filename = 'mortgage-sc
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
-
