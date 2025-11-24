@@ -1,0 +1,175 @@
+{
+  "version": "1.0",
+  "scenarios": [
+    {
+      "id": "a8fc6f0e-9a8c-4f6b-986c-6cd897966384",
+      "name": "Hypofriend MBS 306k",
+      "loanAmount": 306000,
+      "interestRate": 3.52,
+      "effectiveInterestRate": 3.59,
+      "monthlyPayment": 1280.1,
+      "extraYearlyLimit": 15300
+    },
+    {
+      "id": "b3db8a00-61f1-4b97-bbf7-605fa33424cb",
+      "name": "Hypofriend MBS 323k",
+      "loanAmount": 323000,
+      "interestRate": 3.76,
+      "effectiveInterestRate": 3.84,
+      "monthlyPayment": 1415.82,
+      "extraYearlyLimit": 16150
+    },
+    {
+      "id": "18880e19-8f34-4155-aa7a-c5b7084900ca",
+      "name": "Interhyp MBS 306k",
+      "loanAmount": 306000,
+      "interestRate": 3.51,
+      "effectiveInterestRate": 3.59,
+      "monthlyPayment": 1277.55,
+      "extraYearlyLimit": 15300
+    },
+    {
+      "id": "88b3e44f-5463-48c9-abac-48079579686f",
+      "name": "Interhyp DKB 306k",
+      "loanAmount": 306000,
+      "interestRate": 3.64,
+      "effectiveInterestRate": 3.71,
+      "monthlyPayment": 1310.7,
+      "extraYearlyLimit": 15300
+    },
+    {
+      "id": "76f72cec-42a7-488d-b40a-6f068b69c52c",
+      "name": "Interhyp DKB + KfW 323k",
+      "loanAmount": 323000,
+      "interestRate": 3.87,
+      "effectiveInterestRate": 3.97,
+      "monthlyPayment": 1407,
+      "extraYearlyLimit": 11150
+    },
+    {
+      "id": "87e1165c-cbba-4277-8d37-d60b65fe32ea",
+      "name": "Interhyp MBS 323k",
+      "loanAmount": 323000,
+      "interestRate": 3.75,
+      "effectiveInterestRate": 3.83,
+      "monthlyPayment": 1413.13,
+      "extraYearlyLimit": 16150
+    },
+    {
+      "id": "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248",
+      "name": "Interhyp ING + KfW 323k",
+      "loanAmount": 323000,
+      "interestRate": 3.88,
+      "effectiveInterestRate": 3.92,
+      "monthlyPayment": 1522.22,
+      "extraYearlyLimit": 11150
+    }
+  ],
+  "horizonYears": 10,
+  "harvestingStrategy": "optimal",
+  "propertyValue": 340000,
+  "etfReturn": 7,
+  "inflation": 2,
+  "initialETFOptions": [
+    0,
+    17000
+  ],
+  "monthlyETFOptions": [
+    0,
+    135
+  ],
+  "extraYearlyOptions": [
+    0,
+    2000,
+    5000
+  ],
+  "selectedInitialETF": [
+    0,
+    17000
+  ],
+  "selectedMonthlyETF": [
+    0,
+    135
+  ],
+  "selectedExtraYearly": [
+    0,
+    2000,
+    5000
+  ],
+  "selectedScenarios": [
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384",
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb",
+    "18880e19-8f34-4155-aa7a-c5b7084900ca",
+    "88b3e44f-5463-48c9-abac-48079579686f",
+    "76f72cec-42a7-488d-b40a-6f068b69c52c",
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea",
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248"
+  ],
+  "visibleComparisons": {
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-135-10000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-135-5000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-135-0": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-0-10000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-0-5000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-0-0": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-0-0-10000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-0-2000": false,
+    "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-135-2000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-0-0": true,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-0-2000": true,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-0-5000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-135-0": true,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-135-2000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-17000-135-5000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-135-5000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-135-2000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-135-0": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-0-5000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-0-2000": false,
+    "b3db8a00-61f1-4b97-bbf7-605fa33424cb-0-0-0": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-0-0": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-0-2000": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-0-5000": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-135-0": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-135-2000": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-17000-135-5000": false,
+    "18880e19-8f34-4155-aa7a-c5b7084900ca-0-135-5000": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-0-0": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-0-2000": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-0-5000": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-135-0": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-135-2000": false,
+    "88b3e44f-5463-48c9-abac-48079579686f-17000-135-5000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-135-5000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-135-2000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-135-0": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-0-5000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-0-2000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-0-0-0": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-17000-135-5000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-17000-135-2000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-17000-0-5000": false,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-17000-0-2000": true,
+    "76f72cec-42a7-488d-b40a-6f068b69c52c-17000-135-0": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-135-5000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-135-2000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-135-0": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-0-5000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-0-2000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-0-0-0": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-17000-135-0": true,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-17000-0-5000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-17000-135-2000": false,
+    "87e1165c-cbba-4277-8d37-d60b65fe32ea-17000-135-5000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-135-5000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-135-2000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-135-0": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-0-5000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-0-2000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-0-0-0": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-0": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-2000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-5000": false,
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-0-5000": false
+  }
+}
