@@ -43,7 +43,16 @@ function SlugRoute() {
         }
 
         // Fetch the JSON file matching the slug from the data directory
-        const response = await fetch(`/data/${sanitizedSlug}.json`)
+        // Add cache-busting query parameter and no-cache headers to prevent caching
+        const cacheBuster = `?t=${Date.now()}`
+        const response = await fetch(`/data/${sanitizedSlug}.json${cacheBuster}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        })
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error(`Data file "${sanitizedSlug}.json" not found`)

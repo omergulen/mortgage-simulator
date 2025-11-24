@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
 import { MortgageCalculator } from '@/lib/mortgage-calculator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,18 +55,32 @@ export function MortgageSimulator() {
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importText, setImportText] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
+  const previousScenarioIdsRef = useRef<Set<string>>(new Set())
 
-  // Initialize selectedScenarios when scenarios are added
+  // Initialize selectedScenarios when NEW scenarios are added (not when selectedScenarios changes)
   useEffect(() => {
-    if (scenarios.length > 0) {
-      const allScenarioIds = scenarios.map((s) => s.id)
-      const missingSelected = allScenarioIds.filter((id) => !selectedScenarios.includes(id))
+    const currentScenarioIds = new Set(scenarios.map((s) => s.id))
+    const previousScenarioIds = previousScenarioIdsRef.current
 
-      if (missingSelected.length > 0) {
-        setSelectedScenarios([...selectedScenarios, ...missingSelected])
-      }
+    // Find newly added scenarios (in current but not in previous)
+    const newScenarioIds = Array.from(currentScenarioIds).filter((id) => !previousScenarioIds.has(id))
+
+    if (newScenarioIds.length > 0) {
+      // Only add scenarios that aren't already selected (use functional update to avoid dependency)
+      setSelectedScenarios((currentSelected) => {
+        // Ensure currentSelected is an array
+        const safeCurrentSelected = Array.isArray(currentSelected) ? currentSelected : []
+        const missingSelected = newScenarioIds.filter((id) => !safeCurrentSelected.includes(id))
+        if (missingSelected.length > 0) {
+          return [...safeCurrentSelected, ...missingSelected]
+        }
+        return safeCurrentSelected
+      })
     }
-  }, [scenarios, selectedScenarios, setSelectedScenarios])
+
+    // Update the ref for next comparison
+    previousScenarioIdsRef.current = currentScenarioIds
+  }, [scenarios, setSelectedScenarios])
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -157,7 +171,9 @@ export function MortgageSimulator() {
 
   // Generate combinations from base scenarios and selected values
   const combinations = useMemo(() => {
-    if (scenarios.length === 0 || selectedScenarios.length === 0) return []
+    // Ensure selectedScenarios is an array (defensive check)
+    const safeSelectedScenarios = Array.isArray(selectedScenarios) ? selectedScenarios : []
+    if (scenarios.length === 0 || safeSelectedScenarios.length === 0) return []
     if (
       selectedInitialETF.length === 0 ||
       selectedMonthlyETF.length === 0 ||
@@ -166,7 +182,7 @@ export function MortgageSimulator() {
       return []
     }
     // Filter scenarios to only include selected ones
-    const filteredScenarios = scenarios.filter((s) => selectedScenarios.includes(s.id))
+    const filteredScenarios = scenarios.filter((s) => safeSelectedScenarios.includes(s.id))
     return MortgageCalculator.generateCombinations(
       filteredScenarios,
       selectedInitialETF,
@@ -174,6 +190,13 @@ export function MortgageSimulator() {
       selectedExtraYearly
     )
   }, [scenarios, selectedScenarios, selectedInitialETF, selectedMonthlyETF, selectedExtraYearly])
+
+  // Ensure selectedScenarios is always an array (fix if corrupted)
+  useEffect(() => {
+    if (!Array.isArray(selectedScenarios)) {
+      setSelectedScenarios([])
+    }
+  }, [selectedScenarios, setSelectedScenarios])
 
   const comparisons =
     combinations.length > 0

@@ -261,46 +261,50 @@ export function GlobalConfig() {
             Select which mortgage offers to include in combinations.
           </p>
           <div className="flex flex-wrap gap-3">
-            {scenarios.map((scenario) => (
-              <div key={scenario.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`scenario-${scenario.id}`}
-                  checked={selectedScenarios.includes(scenario.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedScenarios([...selectedScenarios, scenario.id])
-                    } else {
-                      setSelectedScenarios(selectedScenarios.filter((id) => id !== scenario.id))
-                    }
-                  }}
-                />
-                <Label htmlFor={`scenario-${scenario.id}`} className="cursor-pointer font-normal">
-                  {scenario.name}
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => setEditingMortgageId(scenario.id)}
-                  title="Edit Mortgage Offer"
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700 dark:text-red-400"
-                  onClick={() => {
-                    if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
-                      deleteScenario(scenario.id)
-                    }
-                  }}
-                  title="Delete Mortgage Offer"
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
+            {scenarios.map((scenario) => {
+              // Ensure selectedScenarios is an array (defensive check)
+              const safeSelectedScenarios = Array.isArray(selectedScenarios) ? selectedScenarios : []
+              return (
+                <div key={scenario.id} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`scenario-${scenario.id}`}
+                    checked={safeSelectedScenarios.includes(scenario.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked === true) {
+                        setSelectedScenarios([...safeSelectedScenarios, scenario.id])
+                      } else {
+                        setSelectedScenarios(safeSelectedScenarios.filter((id) => id !== scenario.id))
+                      }
+                    }}
+                  />
+                  <Label htmlFor={`scenario-${scenario.id}`} className="cursor-pointer font-normal">
+                    {scenario.name}
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => setEditingMortgageId(scenario.id)}
+                    title="Edit Mortgage Offer"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-red-600 hover:text-red-700 dark:text-red-400"
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
+                        deleteScenario(scenario.id)
+                      }
+                    }}
+                    title="Delete Mortgage Offer"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

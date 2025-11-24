@@ -79,7 +79,8 @@ export const useMortgageStore = create<MortgageState>()(
         set((state) => {
           const newScenarios = [...state.scenarios, scenario]
           // Auto-select new scenario for combinations
-          const newSelectedScenarios = [...state.selectedScenarios, scenario.id]
+          const safeSelectedScenarios = Array.isArray(state.selectedScenarios) ? state.selectedScenarios : []
+          const newSelectedScenarios = [...safeSelectedScenarios, scenario.id]
           return {
             scenarios: newScenarios,
             selectedScenarios: newSelectedScenarios,
@@ -92,11 +93,14 @@ export const useMortgageStore = create<MortgageState>()(
         })),
 
       deleteScenario: (id) =>
-        set((state) => ({
-          scenarios: state.scenarios.filter((s) => s.id !== id),
-          selectedScenarios: state.selectedScenarios.filter((sid) => sid !== id),
-          selectedScenarioId: state.selectedScenarioId === id ? null : state.selectedScenarioId,
-        })),
+        set((state) => {
+          const safeSelectedScenarios = Array.isArray(state.selectedScenarios) ? state.selectedScenarios : []
+          return {
+            scenarios: state.scenarios.filter((s) => s.id !== id),
+            selectedScenarios: safeSelectedScenarios.filter((sid) => sid !== id),
+            selectedScenarioId: state.selectedScenarioId === id ? null : state.selectedScenarioId,
+          }
+        }),
 
       setHorizonYears: (years) => set({ horizonYears: years }),
       setHarvestingStrategy: (strategy) => set({ harvestingStrategy: strategy }),
@@ -137,6 +141,37 @@ export const useMortgageStore = create<MortgageState>()(
     {
       name: 'mortgage-simulator-storage',
       storage: createJSONStorage(() => localStorage),
+      // Migration function to ensure data structure is correct
+      migrate: (persistedState: any, version: number) => {
+        // Ensure selectedScenarios is always an array
+        if (persistedState?.state?.selectedScenarios && !Array.isArray(persistedState.state.selectedScenarios)) {
+          persistedState.state.selectedScenarios = []
+        }
+        // Ensure other array fields are arrays
+        if (persistedState?.state?.scenarios && !Array.isArray(persistedState.state.scenarios)) {
+          persistedState.state.scenarios = []
+        }
+        if (persistedState?.state?.selectedInitialETF && !Array.isArray(persistedState.state.selectedInitialETF)) {
+          persistedState.state.selectedInitialETF = [0]
+        }
+        if (persistedState?.state?.selectedMonthlyETF && !Array.isArray(persistedState.state.selectedMonthlyETF)) {
+          persistedState.state.selectedMonthlyETF = [0]
+        }
+        if (persistedState?.state?.selectedExtraYearly && !Array.isArray(persistedState.state.selectedExtraYearly)) {
+          persistedState.state.selectedExtraYearly = [0]
+        }
+        if (persistedState?.state?.initialETFOptions && !Array.isArray(persistedState.state.initialETFOptions)) {
+          persistedState.state.initialETFOptions = [0, 10000, 20000, 50000]
+        }
+        if (persistedState?.state?.monthlyETFOptions && !Array.isArray(persistedState.state.monthlyETFOptions)) {
+          persistedState.state.monthlyETFOptions = [0, 100, 200, 500]
+        }
+        if (persistedState?.state?.extraYearlyOptions && !Array.isArray(persistedState.state.extraYearlyOptions)) {
+          persistedState.state.extraYearlyOptions = [0, 2000, 5000, 10000]
+        }
+        return persistedState
+      },
+      version: 1,
     }
   )
 )
