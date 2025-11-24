@@ -60,7 +60,6 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
     if (!open) {
       resetForm()
     }
-     
   }, [open])
 
   const handleSubmit = (e: React.FormEvent) => {
