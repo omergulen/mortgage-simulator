@@ -60,7 +60,7 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
     if (!open) {
       resetForm()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [open])
 
   const handleSubmit = (e: React.FormEvent) => {
