@@ -7,23 +7,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface DetailedViewProps {
   comparisons: ComparisonResult[]
-  onEdit?: (id: string) => void
 }
 
-export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
+export function DetailedView({ comparisons }: DetailedViewProps) {
   const {
-    scenarios,
     selectedScenarioId,
     setSelectedScenarioId,
     horizonYears,
     harvestingStrategy,
-    duplicateScenario,
-    deleteScenario,
+    propertyValue,
+    etfReturn,
   } = useMortgageStore()
 
   const selectedComparison = comparisons.find((c) => c.id === selectedScenarioId)
@@ -51,9 +48,9 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
               <SelectValue placeholder="-- Select a scenario --" />
             </SelectTrigger>
             <SelectContent>
-              {scenarios.map((scenario) => (
-                <SelectItem key={scenario.id} value={scenario.id}>
-                  {scenario.name}
+              {comparisons.map((comparison) => (
+                <SelectItem key={comparison.id} value={comparison.id}>
+                  {comparison.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -65,7 +62,13 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
 
   const scenario = selectedComparison
   const amortization = MortgageCalculator.calculateAmortization(scenario, horizonYears)
-  const etfResult = MortgageCalculator.calculateETF(scenario, horizonYears, harvestingStrategy)
+  const etfResult = MortgageCalculator.calculateETF(
+    scenario.initialETF,
+    scenario.monthlyETF,
+    etfReturn,
+    horizonYears,
+    harvestingStrategy
+  )
 
   return (
     <div className="space-y-4">
@@ -79,33 +82,14 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {scenarios.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
+            {comparisons.map((comparison) => (
+              <SelectItem key={comparison.id} value={comparison.id}>
+                {comparison.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => onEdit?.(scenario.id)}>
-            ✏️ Edit
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => duplicateScenario(scenario.id)}>
-            📋 Duplicate
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
-                deleteScenario(scenario.id)
-              }
-            }}
-            className="text-red-600 hover:text-red-700 dark:text-red-400"
-          >
-            🗑️ Delete
-          </Button>
-        </div>
+        {/* No actions needed - scenarios are generated from mortgage offers and options */}
       </div>
 
       {/* Loan Metrics */}
@@ -206,7 +190,7 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <MetricItem
               label="Property Value"
-              value={MortgageCalculator.formatCurrency(scenario.propertyValue)}
+              value={MortgageCalculator.formatCurrency(propertyValue)}
             />
 
             {horizonYears >= 10 && (
@@ -218,9 +202,13 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
                 />
                 <MetricItem
                   label="Loan-to-Value (10y)"
-                  value={MortgageCalculator.formatPercent(
-                    ((scenario.balance10y ?? 0) / scenario.propertyValue) * 100
-                  )}
+                  value={
+                    propertyValue > 0
+                      ? MortgageCalculator.formatPercent(
+                          ((scenario.balance10y ?? 0) / propertyValue) * 100
+                        )
+                      : 'N/A'
+                  }
                 />
               </>
             )}
@@ -234,9 +222,13 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
                 />
                 <MetricItem
                   label="Loan-to-Value (20y)"
-                  value={MortgageCalculator.formatPercent(
-                    ((scenario.balance20y ?? 0) / scenario.propertyValue) * 100
-                  )}
+                  value={
+                    propertyValue > 0
+                      ? MortgageCalculator.formatPercent(
+                          ((scenario.balance20y ?? 0) / propertyValue) * 100
+                        )
+                      : 'N/A'
+                  }
                 />
               </>
             )}
@@ -250,9 +242,13 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
                 />
                 <MetricItem
                   label="Loan-to-Value (30y)"
-                  value={MortgageCalculator.formatPercent(
-                    ((scenario.balance30y ?? 0) / scenario.propertyValue) * 100
-                  )}
+                  value={
+                    propertyValue > 0
+                      ? MortgageCalculator.formatPercent(
+                          ((scenario.balance30y ?? 0) / propertyValue) * 100
+                        )
+                      : 'N/A'
+                  }
                 />
               </>
             )}
@@ -277,7 +273,7 @@ export function DetailedView({ comparisons, onEdit }: DetailedViewProps) {
             />
             <MetricItem
               label="Expected Return"
-              value={MortgageCalculator.formatPercent(scenario.etfReturn || 7.0)}
+              value={MortgageCalculator.formatPercent(etfReturn || 7.0)}
             />
             <MetricItem
               label={`Future Value (${horizonYears}y)`}

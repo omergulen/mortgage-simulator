@@ -28,42 +28,65 @@ interface TooltipPayload {
 }
 
 export function Charts({ comparisons }: ChartsProps) {
-  const { horizonYears, harvestingStrategy } = useMortgageStore()
+  const { horizonYears, harvestingStrategy, propertyValue, etfReturn, visibleComparisons } =
+    useMortgageStore()
+
+  // Filter comparisons to only include visible ones (same logic as comparison table)
+  const visibleComparisonsList = useMemo(() => {
+    return comparisons.filter((comp) => visibleComparisons[comp.id] !== false)
+  }, [comparisons, visibleComparisons])
 
   const balanceData = useMemo(() => {
     const data: ChartDataEntry[] = []
 
     for (let year = 0; year <= horizonYears; year++) {
       const entry: ChartDataEntry = { year }
-      comparisons.forEach((comp) => {
-        const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
-        const month = year * 12
-        const scheduleEntry =
-          amortization.schedule.find((e) => e.month === month) ||
-          amortization.schedule[amortization.schedule.length - 1]
-        entry[comp.name] = scheduleEntry ? scheduleEntry.balance : 0
+      visibleComparisonsList.forEach((comp) => {
+        if (year === 0) {
+          // At year 0, balance is the initial loan amount
+          entry[comp.name] = comp.loanAmount
+        } else {
+          const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
+          const month = year * 12
+          const scheduleEntry =
+            amortization.schedule.find((e) => e.month === month) ||
+            amortization.schedule[amortization.schedule.length - 1]
+          entry[comp.name] = scheduleEntry ? scheduleEntry.balance : 0
+        }
       })
       data.push(entry)
     }
 
     return data
-  }, [comparisons, horizonYears])
+  }, [visibleComparisonsList, horizonYears])
 
   const netWorthData = useMemo(() => {
     const data: ChartDataEntry[] = []
 
     for (let year = 0; year <= horizonYears; year++) {
       const entry: ChartDataEntry = { year }
-      comparisons.forEach((comp) => {
-        const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
-        const month = year * 12
-        const scheduleEntry =
-          amortization.schedule.find((e) => e.month === month) ||
-          amortization.schedule[amortization.schedule.length - 1]
-        const balance = scheduleEntry ? scheduleEntry.balance : 0
-        const equity = comp.propertyValue - balance
+      visibleComparisonsList.forEach((comp) => {
+        let balance: number
+        if (year === 0) {
+          // At year 0, balance is the initial loan amount
+          balance = comp.loanAmount
+        } else {
+          const amortization = MortgageCalculator.calculateAmortization(comp, horizonYears)
+          const month = year * 12
+          const scheduleEntry =
+            amortization.schedule.find((e) => e.month === month) ||
+            amortization.schedule[amortization.schedule.length - 1]
+          balance = scheduleEntry ? scheduleEntry.balance : 0
+        }
+        const equity = propertyValue - balance
 
-        const etfResult = MortgageCalculator.calculateETF(comp, year, harvestingStrategy)
+        const etfResult = MortgageCalculator.calculateETF(
+          comp.initialETF,
+          comp.monthlyETF,
+          etfReturn,
+          year,
+          harvestingStrategy
+        )
         const netWorth = equity + etfResult.afterTaxValue
 
         entry[comp.name] = netWorth
@@ -72,7 +95,7 @@ export function Charts({ comparisons }: ChartsProps) {
     }
 
     return data
-  }, [comparisons, horizonYears, harvestingStrategy])
+  }, [visibleComparisonsList, horizonYears, harvestingStrategy, propertyValue, etfReturn])
 
   const formatCurrency = (value: number) => {
     return MortgageCalculator.formatCurrency(value)
@@ -136,7 +159,7 @@ export function Charts({ comparisons }: ChartsProps) {
         <h3 className="text-lg font-semibold text-foreground">Loan Balance Over Time</h3>
         <div className="relative pb-8">
           <ResponsiveContainer width="100%" height={800}>
-            <LineChart data={balanceData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <LineChart data={balanceData} margin={{ top: 5, right: 20, left: 80, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="year"
@@ -166,7 +189,7 @@ export function Charts({ comparisons }: ChartsProps) {
                 position={{ x: undefined, y: undefined }}
               />
               <Legend content={renderCustomLegend} wrapperStyle={{ paddingTop: '20px' }} />
-              {comparisons.map((comp, idx) => (
+              {visibleComparisonsList.map((comp, idx) => (
                 <Line
                   key={comp.id}
                   type="monotone"
@@ -186,7 +209,7 @@ export function Charts({ comparisons }: ChartsProps) {
         <h3 className="text-lg font-semibold text-foreground">Net Worth Over Time</h3>
         <div className="relative pb-8">
           <ResponsiveContainer width="100%" height={800}>
-            <LineChart data={netWorthData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <LineChart data={netWorthData} margin={{ top: 5, right: 20, left: 80, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="year"
@@ -216,7 +239,7 @@ export function Charts({ comparisons }: ChartsProps) {
                 position={{ x: undefined, y: undefined }}
               />
               <Legend content={renderCustomLegend} wrapperStyle={{ paddingTop: '20px' }} />
-              {comparisons.map((comp, idx) => (
+              {visibleComparisonsList.map((comp, idx) => (
                 <Line
                   key={comp.id}
                   type="monotone"

@@ -6,18 +6,27 @@ const TAX_CONSTANTS = {
   SPARER_PAUSCHBETRAG: 1000, // 1,000€ yearly tax-free allowance
 }
 
+// Base scenario - only mortgage information
 export interface Scenario {
   id: string
   name: string
   loanAmount: number
   interestRate: number
   monthlyPayment: number
-  extraYearly?: number
-  propertyValue: number
-  initialETF?: number
-  monthlyETF?: number
-  etfReturn?: number
-  inflation?: number
+  extraYearlyLimit?: number // Optional limit on extra yearly payments (some mortgages don't allow or have limits)
+}
+
+// Scenario combination - combines base scenario with ETF/payment values
+export interface ScenarioCombination {
+  id: string
+  baseScenarioId: string
+  name: string
+  loanAmount: number
+  interestRate: number
+  monthlyPayment: number
+  extraYearly: number
+  initialETF: number
+  monthlyETF: number
 }
 
 export interface AmortizationEntry {
@@ -53,7 +62,7 @@ export interface ETFResult {
 
 export type HarvestingStrategy = 'none' | 'full' | 'partial' | 'optimal'
 
-export interface ComparisonResult extends Scenario {
+export interface ComparisonResult extends ScenarioCombination {
   payoffYears: number
   etfDetails: ETFResult
   balance10y?: number
@@ -90,7 +99,10 @@ export class MortgageCalculator {
   /**
    * Calculate amortization schedule for a mortgage
    */
-  static calculateAmortization(scenario: Scenario, years = 30): AmortizationResult {
+  static calculateAmortization(
+    scenario: Scenario & { extraYearly?: number },
+    years = 30
+  ): AmortizationResult {
     const { loanAmount, interestRate, monthlyPayment, extraYearly = 0 } = scenario
 
     const monthlyRate = this.monthlyRate(interestRate)
@@ -148,7 +160,10 @@ export class MortgageCalculator {
   /**
    * Get remaining balance at specific year
    */
-  static getBalanceAtYear(scenario: Scenario, targetYear: number): number {
+  static getBalanceAtYear(
+    scenario: Scenario & { extraYearly?: number },
+    targetYear: number
+  ): number {
     const amortization = this.calculateAmortization(scenario, targetYear + 5)
     const targetMonth = targetYear * 12
     const entry =
@@ -160,7 +175,7 @@ export class MortgageCalculator {
   /**
    * Calculate years to full payoff
    */
-  static getPayoffYears(scenario: Scenario): number {
+  static getPayoffYears(scenario: Scenario & { extraYearly?: number }): number {
     const amortization = this.calculateAmortization(scenario, 50)
     return amortization.payoffMonths / 12
   }
@@ -177,12 +192,12 @@ export class MortgageCalculator {
    * Calculate ETF future value with German tax optimization
    */
   static calculateETF(
-    scenario: Scenario,
+    initialETF: number,
+    monthlyETF: number,
+    etfReturn: number,
     years: number,
     strategy: HarvestingStrategy = 'optimal'
   ): ETFResult {
-    const { initialETF = 0, monthlyETF = 0, etfReturn = 7.0 } = scenario
-
     const monthlyReturn = etfReturn / 100 / 12
 
     switch (strategy) {
@@ -437,50 +452,133 @@ export class MortgageCalculator {
   }
 
   /**
+   * Generate scenario combinations from base scenarios and selected values
+   */
+  static generateCombinations(
+    scenarios: Scenario[],
+    selectedInitialETF: number[],
+    selectedMonthlyETF: number[],
+    selectedExtraYearly: number[]
+  ): ScenarioCombination[] {
+    const combinations: ScenarioCombination[] = []
+
+    for (const scenario of scenarios) {
+      for (const initialETF of selectedInitialETF) {
+        for (const monthlyETF of selectedMonthlyETF) {
+          for (const extraYearly of selectedExtraYearly) {
+            // Check if extra yearly payment is within limit (if set)
+            if (
+              scenario.extraYearlyLimit !== undefined &&
+              extraYearly > scenario.extraYearlyLimit
+            ) {
+              continue
+            }
+
+            const nameParts = [scenario.name]
+            if (initialETF > 0) nameParts.push(`ETF: ${this.formatCurrency(initialETF)}`)
+            if (monthlyETF > 0) nameParts.push(`Monthly: ${this.formatCurrency(monthlyETF)}`)
+            if (extraYearly > 0) nameParts.push(`Extra: ${this.formatCurrency(extraYearly)}`)
+
+            combinations.push({
+              id: `${scenario.id}-${initialETF}-${monthlyETF}-${extraYearly}`,
+              baseScenarioId: scenario.id,
+              name: nameParts.join(' | '),
+              loanAmount: scenario.loanAmount,
+              interestRate: scenario.interestRate,
+              monthlyPayment: scenario.monthlyPayment,
+              extraYearly,
+              initialETF,
+              monthlyETF,
+            })
+          }
+        }
+      }
+    }
+
+    return combinations
+  }
+
+  /**
    * Calculate comprehensive scenario comparison
    */
   static compareScenarios(
-    scenarios: Scenario[],
+    combinations: ScenarioCombination[],
+    propertyValue: number,
+    etfReturn: number,
     horizonYears = 20,
     harvestingStrategy: HarvestingStrategy = 'optimal'
   ): ComparisonResult[] {
-    return scenarios.map((scenario) => {
+    return combinations.map((combination) => {
+      // Create a temporary scenario-like object for calculations
+      const calcScenario: Scenario & { extraYearly: number } = {
+        id: combination.id,
+        name: combination.name,
+        loanAmount: combination.loanAmount,
+        interestRate: combination.interestRate,
+        monthlyPayment: combination.monthlyPayment,
+        extraYearly: combination.extraYearly,
+      }
+
       const result: Partial<ComparisonResult> = {
-        ...scenario,
-        payoffYears: this.getPayoffYears(scenario),
-        etfDetails: this.calculateETF(scenario, horizonYears, harvestingStrategy),
+        ...combination,
+        payoffYears: this.getPayoffYears(calcScenario),
+        etfDetails: this.calculateETF(
+          combination.initialETF,
+          combination.monthlyETF,
+          etfReturn,
+          horizonYears,
+          harvestingStrategy
+        ),
       }
 
       // Calculate metrics for all relevant years based on horizon
       if (horizonYears >= 10) {
-        result.balance10y = this.getBalanceAtYear(scenario, 10)
-        const amortization10y = this.calculateAmortization(scenario, 10)
+        result.balance10y = this.getBalanceAtYear(calcScenario, 10)
+        const amortization10y = this.calculateAmortization(calcScenario, 10)
         result.totalPaid10y = amortization10y.totalInterest + amortization10y.totalPrincipal
         result.totalInterest10y = amortization10y.totalInterest
-        result.equity10y = scenario.propertyValue - result.balance10y
-        const etf10y = this.calculateETF(scenario, 10, harvestingStrategy)
+        result.equity10y = propertyValue - result.balance10y!
+        const etf10y = this.calculateETF(
+          combination.initialETF,
+          combination.monthlyETF,
+          etfReturn,
+          10,
+          harvestingStrategy
+        )
         result.etfValue10y = etf10y.afterTaxValue
         result.netWorth10y = result.equity10y + result.etfValue10y
       }
 
       if (horizonYears >= 20) {
-        result.balance20y = this.getBalanceAtYear(scenario, 20)
-        const amortization20y = this.calculateAmortization(scenario, 20)
+        result.balance20y = this.getBalanceAtYear(calcScenario, 20)
+        const amortization20y = this.calculateAmortization(calcScenario, 20)
         result.totalPaid20y = amortization20y.totalInterest + amortization20y.totalPrincipal
         result.totalInterest20y = amortization20y.totalInterest
-        result.equity20y = scenario.propertyValue - result.balance20y
-        const etf20y = this.calculateETF(scenario, 20, harvestingStrategy)
+        result.equity20y = propertyValue - result.balance20y!
+        const etf20y = this.calculateETF(
+          combination.initialETF,
+          combination.monthlyETF,
+          etfReturn,
+          20,
+          harvestingStrategy
+        )
         result.etfValue20y = etf20y.afterTaxValue
         result.netWorth20y = result.equity20y + result.etfValue20y
       }
 
       if (horizonYears >= 30) {
-        result.balance30y = this.getBalanceAtYear(scenario, 30)
-        const amortization30y = this.calculateAmortization(scenario, 30)
+        result.balance30y = this.getBalanceAtYear(calcScenario, 30)
+        const amortization30y = this.calculateAmortization(calcScenario, 30)
         result.totalPaid30y = amortization30y.totalInterest + amortization30y.totalPrincipal
         result.totalInterest30y = amortization30y.totalInterest
-        result.equity30y = scenario.propertyValue - result.balance30y
-        const etf30y = this.calculateETF(scenario, 30, harvestingStrategy)
+        result.equity30y = propertyValue - result.balance30y!
+        const etf30y = this.calculateETF(
+          combination.initialETF,
+          combination.monthlyETF,
+          etfReturn,
+          30,
+          harvestingStrategy
+        )
         result.etfValue30y = etf30y.afterTaxValue
         result.netWorth30y = result.equity30y + result.etfValue30y
       }

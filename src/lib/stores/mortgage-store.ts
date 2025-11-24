@@ -3,20 +3,47 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Scenario, HarvestingStrategy } from '@/lib/mortgage-calculator'
 
 interface MortgageState {
+  // Base scenarios (mortgage offers only)
   scenarios: Scenario[]
+  // Global configuration
   horizonYears: 10 | 20 | 30
   harvestingStrategy: HarvestingStrategy
+  propertyValue: number
+  etfReturn: number
+  inflation: number
+  // Combination options
+  initialETFOptions: number[]
+  monthlyETFOptions: number[]
+  extraYearlyOptions: number[]
+  // Selected combination values (for generating combinations)
+  selectedInitialETF: number[]
+  selectedMonthlyETF: number[]
+  selectedExtraYearly: number[]
+  selectedScenarios: string[] // Scenario IDs to include in combinations
+  visibleComparisons: Record<string, boolean> // Comparison IDs to show in table
+  // UI state
   selectedScenarioId: string | null
   sortColumn: string | null
   sortDirection: 'asc' | 'desc' | null
   visibleColumns: Record<string, boolean>
   columnOrder: string[]
+  // Actions
   addScenario: (scenario: Scenario) => void
   updateScenario: (id: string, scenario: Partial<Scenario>) => void
   deleteScenario: (id: string) => void
-  duplicateScenario: (id: string) => void
   setHorizonYears: (years: 10 | 20 | 30) => void
   setHarvestingStrategy: (strategy: HarvestingStrategy) => void
+  setPropertyValue: (value: number) => void
+  setEtfReturn: (value: number) => void
+  setInflation: (value: number) => void
+  setInitialETFOptions: (options: number[]) => void
+  setMonthlyETFOptions: (options: number[]) => void
+  setExtraYearlyOptions: (options: number[]) => void
+  setSelectedInitialETF: (values: number[]) => void
+  setSelectedMonthlyETF: (values: number[]) => void
+  setSelectedExtraYearly: (values: number[]) => void
+  setSelectedScenarios: (ids: string[]) => void
+  setVisibleComparison: (id: string, visible: boolean) => void
   setSelectedScenarioId: (id: string | null) => void
   setSort: (column: string | null, direction: 'asc' | 'desc' | null) => void
   setColumnVisibility: (column: string, visible: boolean) => void
@@ -31,6 +58,17 @@ export const useMortgageStore = create<MortgageState>()(
       scenarios: [],
       horizonYears: 20,
       harvestingStrategy: 'optimal',
+      propertyValue: 400000,
+      etfReturn: 7.0,
+      inflation: 2.0,
+      initialETFOptions: [0, 10000, 20000, 50000],
+      monthlyETFOptions: [0, 100, 200, 500],
+      extraYearlyOptions: [0, 2000, 5000, 10000],
+      selectedInitialETF: [0],
+      selectedMonthlyETF: [0],
+      selectedExtraYearly: [0],
+      selectedScenarios: [],
+      visibleComparisons: {},
       selectedScenarioId: null,
       sortColumn: null,
       sortDirection: null,
@@ -38,9 +76,15 @@ export const useMortgageStore = create<MortgageState>()(
       columnOrder: [],
 
       addScenario: (scenario) =>
-        set((state) => ({
-          scenarios: [...state.scenarios, scenario],
-        })),
+        set((state) => {
+          const newScenarios = [...state.scenarios, scenario]
+          // Auto-select new scenario for combinations
+          const newSelectedScenarios = [...state.selectedScenarios, scenario.id]
+          return {
+            scenarios: newScenarios,
+            selectedScenarios: newSelectedScenarios,
+          }
+        }),
 
       updateScenario: (id, updates) =>
         set((state) => ({
@@ -50,27 +94,26 @@ export const useMortgageStore = create<MortgageState>()(
       deleteScenario: (id) =>
         set((state) => ({
           scenarios: state.scenarios.filter((s) => s.id !== id),
+          selectedScenarios: state.selectedScenarios.filter((sid) => sid !== id),
           selectedScenarioId: state.selectedScenarioId === id ? null : state.selectedScenarioId,
         })),
 
-      duplicateScenario: (id) =>
-        set((state) => {
-          const scenario = state.scenarios.find((s) => s.id === id)
-          if (!scenario) return state
-
-          const duplicated: Scenario = {
-            ...scenario,
-            id: crypto.randomUUID(),
-            name: `${scenario.name} (Copy)`,
-          }
-
-          return {
-            scenarios: [...state.scenarios, duplicated],
-          }
-        }),
-
       setHorizonYears: (years) => set({ horizonYears: years }),
       setHarvestingStrategy: (strategy) => set({ harvestingStrategy: strategy }),
+      setPropertyValue: (value) => set({ propertyValue: value }),
+      setEtfReturn: (value) => set({ etfReturn: value }),
+      setInflation: (value) => set({ inflation: value }),
+      setInitialETFOptions: (options) => set({ initialETFOptions: options }),
+      setMonthlyETFOptions: (options) => set({ monthlyETFOptions: options }),
+      setExtraYearlyOptions: (options) => set({ extraYearlyOptions: options }),
+      setSelectedInitialETF: (values) => set({ selectedInitialETF: values }),
+      setSelectedMonthlyETF: (values) => set({ selectedMonthlyETF: values }),
+      setSelectedExtraYearly: (values) => set({ selectedExtraYearly: values }),
+      setSelectedScenarios: (ids) => set({ selectedScenarios: ids }),
+      setVisibleComparison: (id, visible) =>
+        set((state) => ({
+          visibleComparisons: { ...state.visibleComparisons, [id]: visible },
+        })),
       setSelectedScenarioId: (id) => set({ selectedScenarioId: id }),
       setSort: (column, direction) => set({ sortColumn: column, sortDirection: direction }),
       setColumnVisibility: (column, visible) =>
@@ -82,6 +125,8 @@ export const useMortgageStore = create<MortgageState>()(
       clearAll: () =>
         set({
           scenarios: [],
+          selectedScenarios: [],
+          visibleComparisons: {},
           selectedScenarioId: null,
           sortColumn: null,
           sortDirection: null,

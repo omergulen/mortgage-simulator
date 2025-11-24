@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
 import { MortgageCalculator } from '@/lib/mortgage-calculator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,8 +12,9 @@ import { AppLayout } from './layout/app-layout'
 import {
   migrateOldScenarios,
   hasOldScenarios,
-  downloadScenarios,
-  importScenarios,
+  downloadAllData,
+  importAllData,
+  type ExportData,
 } from '@/lib/utils/migrate-scenarios'
 import {
   Dialog,
@@ -26,8 +27,37 @@ import {
 import { Label } from '@/components/ui/label'
 
 export function MortgageSimulator() {
-  const { scenarios, horizonYears, harvestingStrategy, addScenario, clearAll } = useMortgageStore()
-  const [editingScenario, setEditingScenario] = useState<{ id: string } | null>(null)
+  const {
+    scenarios,
+    horizonYears,
+    harvestingStrategy,
+    propertyValue,
+    etfReturn,
+    inflation,
+    initialETFOptions,
+    monthlyETFOptions,
+    extraYearlyOptions,
+    selectedInitialETF,
+    selectedMonthlyETF,
+    selectedExtraYearly,
+    selectedScenarios,
+    visibleComparisons,
+    setSelectedScenarios,
+    setHorizonYears,
+    setHarvestingStrategy,
+    setPropertyValue,
+    setEtfReturn,
+    setInflation,
+    setInitialETFOptions,
+    setMonthlyETFOptions,
+    setExtraYearlyOptions,
+    setSelectedInitialETF,
+    setSelectedMonthlyETF,
+    setSelectedExtraYearly,
+    setVisibleComparison,
+    addScenario,
+    clearAll,
+  } = useMortgageStore()
   const [showMigrationDialog, setShowMigrationDialog] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importText, setImportText] = useState('')
@@ -40,6 +70,18 @@ export function MortgageSimulator() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Initialize selectedScenarios when scenarios are added
+  useEffect(() => {
+    if (scenarios.length > 0) {
+      const allScenarioIds = scenarios.map((s) => s.id)
+      const missingSelected = allScenarioIds.filter((id) => !selectedScenarios.includes(id))
+
+      if (missingSelected.length > 0) {
+        setSelectedScenarios([...selectedScenarios, ...missingSelected])
+      }
+    }
+  }, [scenarios, selectedScenarios, setSelectedScenarios])
+
   const handleMigrate = () => {
     const oldScenarios = migrateOldScenarios()
     oldScenarios.forEach((scenario) => addScenario(scenario))
@@ -47,14 +89,51 @@ export function MortgageSimulator() {
   }
 
   const handleExport = () => {
-    downloadScenarios(scenarios)
+    const exportData: ExportData = {
+      version: '1.0',
+      scenarios,
+      horizonYears,
+      harvestingStrategy,
+      propertyValue,
+      etfReturn,
+      inflation,
+      initialETFOptions,
+      monthlyETFOptions,
+      extraYearlyOptions,
+      selectedInitialETF,
+      selectedMonthlyETF,
+      selectedExtraYearly,
+      selectedScenarios,
+      visibleComparisons,
+    }
+    downloadAllData(exportData)
   }
 
   const handleImport = () => {
     try {
       setImportError(null)
-      const imported = importScenarios(importText)
-      imported.forEach((scenario) => addScenario(scenario))
+      const imported = importAllData(importText)
+      // Add scenarios
+      imported.scenarios.forEach((scenario) => addScenario(scenario))
+      // Restore all configuration
+      setHorizonYears(imported.horizonYears)
+      setHarvestingStrategy(imported.harvestingStrategy)
+      setPropertyValue(imported.propertyValue)
+      setEtfReturn(imported.etfReturn)
+      setInflation(imported.inflation)
+      setInitialETFOptions(imported.initialETFOptions)
+      setMonthlyETFOptions(imported.monthlyETFOptions)
+      setExtraYearlyOptions(imported.extraYearlyOptions)
+      setSelectedInitialETF(imported.selectedInitialETF)
+      setSelectedMonthlyETF(imported.selectedMonthlyETF)
+      setSelectedExtraYearly(imported.selectedExtraYearly)
+      setSelectedScenarios(imported.selectedScenarios)
+      // Restore visible comparisons if present
+      if (imported.visibleComparisons) {
+        Object.entries(imported.visibleComparisons).forEach(([id, visible]) => {
+          setVisibleComparison(id, visible)
+        })
+      }
       setShowImportDialog(false)
       setImportText('')
     } catch (error) {
@@ -65,9 +144,30 @@ export function MortgageSimulator() {
   const handleImportReplace = () => {
     try {
       setImportError(null)
-      const imported = importScenarios(importText)
+      const imported = importAllData(importText)
+      // Clear everything first
       clearAll()
-      imported.forEach((scenario) => addScenario(scenario))
+      // Add scenarios
+      imported.scenarios.forEach((scenario) => addScenario(scenario))
+      // Restore all configuration
+      setHorizonYears(imported.horizonYears)
+      setHarvestingStrategy(imported.harvestingStrategy)
+      setPropertyValue(imported.propertyValue)
+      setEtfReturn(imported.etfReturn)
+      setInflation(imported.inflation)
+      setInitialETFOptions(imported.initialETFOptions)
+      setMonthlyETFOptions(imported.monthlyETFOptions)
+      setExtraYearlyOptions(imported.extraYearlyOptions)
+      setSelectedInitialETF(imported.selectedInitialETF)
+      setSelectedMonthlyETF(imported.selectedMonthlyETF)
+      setSelectedExtraYearly(imported.selectedExtraYearly)
+      setSelectedScenarios(imported.selectedScenarios)
+      // Restore visible comparisons if present
+      if (imported.visibleComparisons) {
+        Object.entries(imported.visibleComparisons).forEach(([id, visible]) => {
+          setVisibleComparison(id, visible)
+        })
+      }
       setShowImportDialog(false)
       setImportText('')
     } catch (error) {
@@ -75,9 +175,35 @@ export function MortgageSimulator() {
     }
   }
 
+  // Generate combinations from base scenarios and selected values
+  const combinations = useMemo(() => {
+    if (scenarios.length === 0 || selectedScenarios.length === 0) return []
+    if (
+      selectedInitialETF.length === 0 ||
+      selectedMonthlyETF.length === 0 ||
+      selectedExtraYearly.length === 0
+    ) {
+      return []
+    }
+    // Filter scenarios to only include selected ones
+    const filteredScenarios = scenarios.filter((s) => selectedScenarios.includes(s.id))
+    return MortgageCalculator.generateCombinations(
+      filteredScenarios,
+      selectedInitialETF,
+      selectedMonthlyETF,
+      selectedExtraYearly
+    )
+  }, [scenarios, selectedScenarios, selectedInitialETF, selectedMonthlyETF, selectedExtraYearly])
+
   const comparisons =
-    scenarios.length > 0
-      ? MortgageCalculator.compareScenarios(scenarios, horizonYears, harvestingStrategy)
+    combinations.length > 0
+      ? MortgageCalculator.compareScenarios(
+          combinations,
+          propertyValue,
+          etfReturn,
+          horizonYears,
+          harvestingStrategy
+        )
       : []
 
   return (
@@ -87,18 +213,12 @@ export function MortgageSimulator() {
           <p className="text-muted-foreground mb-4">
             Compare mortgage offers with detailed amortization and ETF optimization
           </p>
-          <GlobalConfig />
-        </div>
 
-        <div className="space-y-6">
-          {/* Add Scenario Button and Import/Export */}
-          <Card>
+          {/* Add Mortgage Offer Button at the top */}
+          <Card className="mb-6">
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-4 justify-center items-center">
-                <ScenarioFormModal
-                  editingScenario={editingScenario}
-                  onClose={() => setEditingScenario(null)}
-                />
+                <ScenarioFormModal />
                 <Button variant="outline" onClick={handleExport} disabled={scenarios.length === 0}>
                   📥 Export Scenarios
                 </Button>
@@ -109,17 +229,21 @@ export function MortgageSimulator() {
             </CardContent>
           </Card>
 
+          <GlobalConfig />
+        </div>
+
+        <div className="space-y-6">
           {/* Comparison Table */}
           {scenarios.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="sticky top-0 bg-card z-10">Scenario Comparison</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Scenario Comparison</CardTitle>
+                  <ComparisonTable comparisons={comparisons} showButtonsOnly />
+                </div>
               </CardHeader>
               <CardContent>
-                <ComparisonTable
-                  comparisons={comparisons}
-                  onEdit={(id) => setEditingScenario({ id })}
-                />
+                <ComparisonTable comparisons={comparisons} />
               </CardContent>
             </Card>
           )}
@@ -133,10 +257,7 @@ export function MortgageSimulator() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <DetailedView
-                  comparisons={comparisons}
-                  onEdit={(id) => setEditingScenario({ id })}
-                />
+                <DetailedView comparisons={comparisons} />
               </CardContent>
             </Card>
           )}
