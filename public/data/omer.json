@@ -63,6 +63,33 @@
       "effectiveInterestRate": 3.92,
       "monthlyPayment": 1522.22,
       "extraYearlyLimit": 11150
+    },
+    {
+      "id": "2ce21c59-041a-4ea7-92ec-37ec89c26c46",
+      "name": "Interhyp ING 306k",
+      "loanAmount": 306000,
+      "interestRate": 3.65,
+      "effectiveInterestRate": 3.74,
+      "monthlyPayment": 1313.25,
+      "extraYearlyLimit": 15300
+    },
+    {
+      "id": "98613f08-c618-4d4f-b89c-3bb984a65c0c",
+      "name": "E&V ING 306k",
+      "loanAmount": 306000,
+      "interestRate": 3.65,
+      "effectiveInterestRate": 3.74,
+      "monthlyPayment": 1313.25,
+      "extraYearlyLimit": 15300
+    },
+    {
+      "id": "69d38377-b523-4f33-9f95-008b1cb01ffe",
+      "name": "E&V ING 323k",
+      "loanAmount": 323000,
+      "interestRate": 3.74,
+      "effectiveInterestRate": 3.84,
+      "monthlyPayment": 1545.02,
+      "extraYearlyLimit": 16150
     }
   ],
   "horizonYears": 10,
@@ -103,7 +130,10 @@
     "88b3e44f-5463-48c9-abac-48079579686f",
     "76f72cec-42a7-488d-b40a-6f068b69c52c",
     "87e1165c-cbba-4277-8d37-d60b65fe32ea",
-    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248"
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248",
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46",
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c",
+    "69d38377-b523-4f33-9f95-008b1cb01ffe"
   ],
   "visibleComparisons": {
     "a8fc6f0e-9a8c-4f6b-986c-6cd897966384-17000-135-10000": false,
@@ -170,6 +200,30 @@
     "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-0": false,
     "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-2000": false,
     "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-135-5000": false,
-    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-0-5000": false
+    "ea564973-9fe0-45f6-9c7a-cfb5f0bcc248-17000-0-5000": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-0-0": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-0-2000": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-0-5000": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-135-0": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-135-2000": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-17000-135-5000": false,
+    "2ce21c59-041a-4ea7-92ec-37ec89c26c46-0-135-5000": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-0-0": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-0-2000": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-0-5000": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-135-0": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-135-2000": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-17000-135-5000": false,
+    "98613f08-c618-4d4f-b89c-3bb984a65c0c-0-135-5000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-135-5000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-135-2000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-135-0": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-0-5000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-0-2000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-0-0-0": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-17000-135-5000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-17000-135-2000": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-17000-135-0": false,
+    "69d38377-b523-4f33-9f95-008b1cb01ffe-17000-0-5000": false
   }
 }
