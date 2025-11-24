@@ -133,22 +133,37 @@ export function Charts({ comparisons }: ChartsProps) {
     )
   }
 
-  // Custom legend component
+  // Custom legend component with scrollable container
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderCustomLegend = (props: any) => {
     const payload = props.payload as Array<{ value: string; color: string }> | undefined
     if (!payload || payload.length === 0) return null
+
     return (
-      <div className="flex flex-wrap gap-4 justify-center mt-6 mb-2">
-        {payload.map((entry, index: number) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-            <div
-              className="w-3 h-3 rounded-full flex-shrink-0"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-foreground whitespace-nowrap">{entry.value}</span>
+      <div className="mt-4 mb-2">
+        <div className="overflow-x-auto overflow-y-hidden max-h-24 pb-2">
+          <div className="flex gap-3 min-w-max px-2">
+            {payload.map((entry, index: number) => (
+              <div key={index} className="flex items-center gap-1.5 text-xs flex-shrink-0">
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span
+                  className="text-foreground whitespace-nowrap max-w-[150px] truncate"
+                  title={entry.value}
+                >
+                  {entry.value}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+        {payload.length > 8 && (
+          <p className="text-xs text-muted-foreground text-center mt-1">
+            Scroll horizontally to see all scenarios • Use filter to show/hide specific scenarios
+          </p>
+        )}
       </div>
     )
   }

@@ -1,7 +1,5 @@
 import type { Scenario, HarvestingStrategy } from '@/lib/mortgage-calculator'
 
-const OLD_STORAGE_KEY = 'mortgageScenarios'
-
 export interface ExportData {
   version: string
   scenarios: Scenario[]
@@ -24,54 +22,6 @@ export interface ExportData {
 }
 
 /**
- * Migrate scenarios from old localStorage format to new format
- */
-export function migrateOldScenarios(): Scenario[] {
-  if (typeof window === 'undefined') return []
-
-  try {
-    const oldData = localStorage.getItem(OLD_STORAGE_KEY)
-    if (!oldData) return []
-
-    const oldScenarios = JSON.parse(oldData)
-    if (!Array.isArray(oldScenarios)) return []
-
-    // Convert old format to new format (only mortgage-specific fields)
-    const migratedScenarios: Scenario[] = oldScenarios.map((old: Record<string, unknown>) => ({
-      id: (old.id as string) || crypto.randomUUID(),
-      name: (old.name as string) || 'Unnamed Scenario',
-      loanAmount: Number(old.loanAmount) || 0,
-      interestRate: Number(old.interestRate) || 0,
-      monthlyPayment: Number(old.monthlyPayment) || 0,
-      extraYearlyLimit:
-        old.extraYearlyLimit !== undefined ? Number(old.extraYearlyLimit) : undefined,
-    }))
-
-    return migratedScenarios
-  } catch (error) {
-    console.error('Error migrating old scenarios:', error)
-    return []
-  }
-}
-
-/**
- * Check if old scenarios exist and haven't been migrated yet
- */
-export function hasOldScenarios(): boolean {
-  if (typeof window === 'undefined') return false
-
-  try {
-    const oldData = localStorage.getItem(OLD_STORAGE_KEY)
-    if (!oldData) return false
-
-    const oldScenarios = JSON.parse(oldData)
-    return Array.isArray(oldScenarios) && oldScenarios.length > 0
-  } catch {
-    return false
-  }
-}
-
-/**
  * Export all application data to JSON
  */
 export function exportAllData(data: ExportData): string {
@@ -89,15 +39,22 @@ export function importAllData(json: string): ExportData {
     // Check if it's the old format (just an array of scenarios)
     if (Array.isArray(data)) {
       // Old format - convert scenarios and use defaults for everything else
-      const scenarios: Scenario[] = data.map((item: Record<string, unknown>, index: number) => ({
-        id: (item.id as string) || crypto.randomUUID(),
-        name: (item.name as string) || `Imported Scenario ${index + 1}`,
-        loanAmount: Number(item.loanAmount) || 0,
-        interestRate: Number(item.interestRate) || 0,
-        monthlyPayment: Number(item.monthlyPayment) || 0,
-        extraYearlyLimit:
-          item.extraYearlyLimit !== undefined ? Number(item.extraYearlyLimit) : undefined,
-      }))
+      const scenarios: Scenario[] = data.map((item: Record<string, unknown>, index: number) => {
+        const interestRate = Number(item.interestRate) || 0
+        return {
+          id: (item.id as string) || crypto.randomUUID(),
+          name: (item.name as string) || `Imported Scenario ${index + 1}`,
+          loanAmount: Number(item.loanAmount) || 0,
+          interestRate,
+          effectiveInterestRate:
+            item.effectiveInterestRate !== undefined
+              ? Number(item.effectiveInterestRate)
+              : interestRate, // Default to nominal rate if not provided
+          monthlyPayment: Number(item.monthlyPayment) || 0,
+          extraYearlyLimit:
+            item.extraYearlyLimit !== undefined ? Number(item.extraYearlyLimit) : undefined,
+        }
+      })
 
       return {
         version: '1.0',
@@ -124,15 +81,22 @@ export function importAllData(json: string): ExportData {
     }
 
     const scenarios: Scenario[] = data.scenarios.map(
-      (item: Record<string, unknown>, index: number) => ({
-        id: (item.id as string) || crypto.randomUUID(),
-        name: (item.name as string) || `Imported Scenario ${index + 1}`,
-        loanAmount: Number(item.loanAmount) || 0,
-        interestRate: Number(item.interestRate) || 0,
-        monthlyPayment: Number(item.monthlyPayment) || 0,
-        extraYearlyLimit:
-          item.extraYearlyLimit !== undefined ? Number(item.extraYearlyLimit) : undefined,
-      })
+      (item: Record<string, unknown>, index: number) => {
+        const interestRate = Number(item.interestRate) || 0
+        return {
+          id: (item.id as string) || crypto.randomUUID(),
+          name: (item.name as string) || `Imported Scenario ${index + 1}`,
+          loanAmount: Number(item.loanAmount) || 0,
+          interestRate,
+          effectiveInterestRate:
+            item.effectiveInterestRate !== undefined
+              ? Number(item.effectiveInterestRate)
+              : interestRate, // Default to nominal rate if not provided
+          monthlyPayment: Number(item.monthlyPayment) || 0,
+          extraYearlyLimit:
+            item.extraYearlyLimit !== undefined ? Number(item.extraYearlyLimit) : undefined,
+        }
+      }
     )
 
     return {

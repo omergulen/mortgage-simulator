@@ -13,7 +13,8 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { parseNumber } from '@/lib/utils/parse-number'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { X, Pencil } from 'lucide-react'
+import { ScenarioFormModal } from './scenario-form-modal'
 
 export function GlobalConfig() {
   const {
@@ -44,6 +45,8 @@ export function GlobalConfig() {
     setSelectedScenarios,
     deleteScenario,
   } = useMortgageStore()
+
+  const [editingMortgageId, setEditingMortgageId] = useState<string | null>(null)
 
   // Store raw string values for inputs to allow . and , while typing
   const [rawGlobalValues, setRawGlobalValues] = useState({
@@ -277,6 +280,15 @@ export function GlobalConfig() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setEditingMortgageId(scenario.id)}
+                  title="Edit Mortgage Offer"
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="h-6 w-6 p-0 text-red-600 hover:text-red-700 dark:text-red-400"
                   onClick={() => {
                     if (confirm(`Are you sure you want to delete "${scenario.name}"?`)) {
@@ -414,6 +426,12 @@ export function GlobalConfig() {
           </div>
         </div>
       </div>
+
+      {/* Edit Mortgage Offer Modal */}
+      <ScenarioFormModal
+        editingMortgageId={editingMortgageId}
+        onClose={() => setEditingMortgageId(null)}
+      />
     </div>
   )
 }

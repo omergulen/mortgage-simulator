@@ -11,7 +11,8 @@ export interface Scenario {
   id: string
   name: string
   loanAmount: number
-  interestRate: number
+  interestRate: number // Sollzins (nominal interest rate) - used for calculations
+  effectiveInterestRate: number // Effektivzins (effective interest rate/APR) - includes all costs, for comparison
   monthlyPayment: number
   extraYearlyLimit?: number // Optional limit on extra yearly payments (some mortgages don't allow or have limits)
 }
@@ -23,6 +24,7 @@ export interface ScenarioCombination {
   name: string
   loanAmount: number
   interestRate: number
+  effectiveInterestRate: number
   monthlyPayment: number
   extraYearly: number
   initialETF: number
@@ -485,6 +487,7 @@ export class MortgageCalculator {
               name: nameParts.join(' | '),
               loanAmount: scenario.loanAmount,
               interestRate: scenario.interestRate,
+              effectiveInterestRate: scenario.effectiveInterestRate,
               monthlyPayment: scenario.monthlyPayment,
               extraYearly,
               initialETF,
@@ -515,6 +518,7 @@ export class MortgageCalculator {
         name: combination.name,
         loanAmount: combination.loanAmount,
         interestRate: combination.interestRate,
+        effectiveInterestRate: combination.effectiveInterestRate,
         monthlyPayment: combination.monthlyPayment,
         extraYearly: combination.extraYearly,
       }

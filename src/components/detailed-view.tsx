@@ -104,8 +104,12 @@ export function DetailedView({ comparisons }: DetailedViewProps) {
               value={MortgageCalculator.formatCurrency(scenario.loanAmount)}
             />
             <MetricItem
-              label="Interest Rate"
+              label="Sollzins (Nominal Interest Rate)"
               value={MortgageCalculator.formatPercent(scenario.interestRate)}
+            />
+            <MetricItem
+              label="Effektivzins (Effective Interest Rate)"
+              value={MortgageCalculator.formatPercent(scenario.effectiveInterestRate)}
             />
             <MetricItem
               label="Monthly Payment"

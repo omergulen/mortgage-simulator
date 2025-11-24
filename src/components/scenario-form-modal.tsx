@@ -16,17 +16,25 @@ import { Label } from '@/components/ui/label'
 import { Plus } from 'lucide-react'
 
 interface ScenarioFormModalProps {
+  editingMortgageId?: string | null
   onClose?: () => void
 }
 
-export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
-  const { addScenario } = useMortgageStore()
+export function ScenarioFormModal({
+  editingMortgageId = null,
+  onClose,
+}: ScenarioFormModalProps = {}) {
+  const { addScenario, updateScenario, scenarios } = useMortgageStore()
   const [open, setOpen] = useState(false)
+  const editingMortgage = editingMortgageId
+    ? scenarios.find((s) => s.id === editingMortgageId)
+    : null
 
   const [formData, setFormData] = useState<Partial<Scenario>>({
     name: '',
     loanAmount: 0,
     interestRate: 0,
+    effectiveInterestRate: 0,
     monthlyPayment: 0,
     extraYearlyLimit: undefined,
   })
@@ -35,6 +43,7 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
   const [rawValues, setRawValues] = useState({
     loanAmount: '',
     interestRate: '',
+    effectiveInterestRate: '',
     monthlyPayment: '',
     extraYearlyLimit: '',
   })
@@ -44,37 +53,62 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
       name: '',
       loanAmount: 0,
       interestRate: 0,
+      effectiveInterestRate: 0,
       monthlyPayment: 0,
       extraYearlyLimit: undefined,
     })
     setRawValues({
       loanAmount: '',
       interestRate: '',
+      effectiveInterestRate: '',
       monthlyPayment: '',
       extraYearlyLimit: '',
     })
   }
 
-  // Reset form when dialog closes
+  // Load mortgage data when editing
   useEffect(() => {
-    if (!open) {
+    if (editingMortgageId && editingMortgage) {
+      setFormData(editingMortgage)
+      setRawValues({
+        loanAmount: editingMortgage.loanAmount.toString(),
+        interestRate: editingMortgage.interestRate.toString(),
+        effectiveInterestRate: editingMortgage.effectiveInterestRate.toString(),
+        monthlyPayment: editingMortgage.monthlyPayment.toString(),
+        extraYearlyLimit: editingMortgage.extraYearlyLimit?.toString() || '',
+      })
+      setOpen(true)
+    } else if (!editingMortgageId && !open) {
       resetForm()
     }
-  }, [open])
+  }, [editingMortgageId, editingMortgage, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const scenario: Scenario = {
-      id: crypto.randomUUID(),
-      name: formData.name || 'Unnamed Scenario',
-      loanAmount: formData.loanAmount || 0,
-      interestRate: formData.interestRate || 0,
-      monthlyPayment: formData.monthlyPayment || 0,
-      extraYearlyLimit: formData.extraYearlyLimit,
+    if (editingMortgage) {
+      // Update existing mortgage offer
+      updateScenario(editingMortgage.id, {
+        name: formData.name || 'Unnamed Mortgage Offer',
+        loanAmount: formData.loanAmount || 0,
+        interestRate: formData.interestRate || 0,
+        effectiveInterestRate: formData.effectiveInterestRate || 0,
+        monthlyPayment: formData.monthlyPayment || 0,
+        extraYearlyLimit: formData.extraYearlyLimit,
+      })
+    } else {
+      // Add new mortgage offer
+      const mortgage: Scenario = {
+        id: crypto.randomUUID(),
+        name: formData.name || 'Unnamed Mortgage Offer',
+        loanAmount: formData.loanAmount || 0,
+        interestRate: formData.interestRate || 0,
+        effectiveInterestRate: formData.effectiveInterestRate || 0,
+        monthlyPayment: formData.monthlyPayment || 0,
+        extraYearlyLimit: formData.extraYearlyLimit,
+      }
+      addScenario(mortgage)
     }
-
-    addScenario(scenario)
 
     setOpen(false)
     resetForm()
@@ -111,26 +145,30 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
         setOpen(isOpen)
         if (!isOpen) {
           resetForm()
-          onClose?.()
+          onClose?.() // This will clear editingMortgageId in parent
         }
       }}
     >
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          Add Mortgage Offer
-        </Button>
-      </DialogTrigger>
+      {!editingMortgageId && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4" />
+            Add Mortgage Offer
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Mortgage Offer</DialogTitle>
+          <DialogTitle>
+            {editingMortgage ? 'Edit Mortgage Offer' : 'Add Mortgage Offer'}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="scenario-name">Scenario Name</Label>
+              <Label htmlFor="mortgage-name">Mortgage Offer Name</Label>
               <Input
-                id="scenario-name"
+                id="mortgage-name"
                 value={formData.name || ''}
                 onChange={(e) => handleTextChange('name', e.target.value)}
                 placeholder="e.g., 306k MBS Interhyp"
@@ -151,13 +189,27 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="interest-rate">Interest Rate (% p.a.)</Label>
+              <Label htmlFor="interest-rate">Sollzins / Nominal Interest Rate (% p.a.)</Label>
               <Input
                 id="interest-rate"
                 type="text"
                 value={rawValues.interestRate}
                 onChange={(e) => handleInputChange('interestRate', e.target.value)}
                 placeholder="3.51 or 3,51"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="effective-interest-rate">
+                Effektivzins / Effective Interest Rate (% p.a.)
+              </Label>
+              <Input
+                id="effective-interest-rate"
+                type="text"
+                value={rawValues.effectiveInterestRate}
+                onChange={(e) => handleInputChange('effectiveInterestRate', e.target.value)}
+                placeholder="e.g., 3.65 or 3,65"
                 required
               />
             </div>
@@ -187,7 +239,9 @@ export function ScenarioFormModal({ onClose }: ScenarioFormModalProps = {}) {
           </div>
 
           <DialogFooter>
-            <Button type="submit">Add Mortgage Offer</Button>
+            <Button type="submit">
+              {editingMortgage ? 'Update Mortgage Offer' : 'Add Mortgage Offer'}
+            </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>

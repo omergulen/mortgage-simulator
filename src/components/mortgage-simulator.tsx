@@ -9,13 +9,7 @@ import { DetailedView } from './detailed-view'
 import { Charts } from './charts'
 import { GlobalConfig } from './global-config'
 import { AppLayout } from './layout/app-layout'
-import {
-  migrateOldScenarios,
-  hasOldScenarios,
-  downloadAllData,
-  importAllData,
-  type ExportData,
-} from '@/lib/utils/migrate-scenarios'
+import { downloadAllData, importAllData, type ExportData } from '@/lib/utils/migrate-scenarios'
 import {
   Dialog,
   DialogContent,
@@ -58,17 +52,9 @@ export function MortgageSimulator() {
     addScenario,
     clearAll,
   } = useMortgageStore()
-  const [showMigrationDialog, setShowMigrationDialog] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importText, setImportText] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
-
-  // Check for old scenarios on mount (one-time initialization)
-  useEffect(() => {
-    if (hasOldScenarios() && scenarios.length === 0) {
-      setShowMigrationDialog(true)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize selectedScenarios when scenarios are added
   useEffect(() => {
@@ -81,12 +67,6 @@ export function MortgageSimulator() {
       }
     }
   }, [scenarios, selectedScenarios, setSelectedScenarios])
-
-  const handleMigrate = () => {
-    const oldScenarios = migrateOldScenarios()
-    oldScenarios.forEach((scenario) => addScenario(scenario))
-    setShowMigrationDialog(false)
-  }
 
   const handleExport = () => {
     const exportData: ExportData = {
@@ -274,24 +254,6 @@ export function MortgageSimulator() {
             </Card>
           )}
         </div>
-
-        {/* Migration Dialog */}
-        <Dialog open={showMigrationDialog} onOpenChange={setShowMigrationDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Migrate Old Scenarios?</DialogTitle>
-              <DialogDescription>
-                We found scenarios from the previous version. Would you like to import them?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowMigrationDialog(false)}>
-                Skip
-              </Button>
-              <Button onClick={handleMigrate}>Import</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Import Dialog */}
         <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>

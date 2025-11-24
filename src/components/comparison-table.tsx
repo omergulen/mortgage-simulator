@@ -86,7 +86,8 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
         { key: 'name', label: 'Scenario', sortable: true, alwaysVisible: true },
         // Basic scenario properties
         { key: 'loanAmount', label: 'Loan Amount', sortable: true },
-        { key: 'interestRate', label: 'Interest Rate', sortable: true },
+        { key: 'interestRate', label: 'Sollzins (Nominal)', sortable: true },
+        { key: 'effectiveInterestRate', label: 'Effektivzins (Effective)', sortable: true },
         { key: 'monthlyPayment', label: 'Monthly Payment', sortable: true },
         { key: 'extraYearly', label: 'Extra Yearly Payment', sortable: true },
         { key: 'initialETF', label: 'Initial ETF', sortable: true },
@@ -241,6 +242,7 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
       return {
         baseId,
         baseName: baseScenario?.name || 'Unknown',
+        monthlyPayment: baseScenario?.monthlyPayment || 0,
         comparisons: comps,
       }
     })
@@ -265,7 +267,8 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
                 {scenarioGroups.map((group) => (
                   <div key={group.baseId} className="space-y-2">
                     <div className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
-                      {group.baseName}
+                      {group.baseName} ({MortgageCalculator.formatCurrency(group.monthlyPayment)}
+                      /mo)
                     </div>
                     <div className="space-y-1 pl-2">
                       {group.comparisons.map((item) => {
@@ -414,7 +417,6 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
             <tr>
               {columns.map((col, idx) => {
                 const isFirst = idx === 0
-                const isLast = idx === columns.length - 1
                 const isSortable = col.sortable !== false
 
                 return (
@@ -423,7 +425,6 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
                     className={cn(
                       'px-4 py-3 text-left font-semibold border-b bg-card',
                       isFirst && 'sticky left-0 z-50 shadow-[2px_0_3px_rgba(0,0,0,0.1)]',
-                      isLast && 'sticky right-0 z-50 shadow-[-2px_0_3px_rgba(0,0,0,0.1)]',
                       isSortable && 'cursor-pointer hover:bg-muted/50'
                     )}
                     style={{ backgroundColor: 'hsl(var(--card))' }}
@@ -475,6 +476,14 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
                       return (
                         <td key={col.key} className={cn('px-4 py-3', rowBg)}>
                           {MortgageCalculator.formatPercent(comp.interestRate)}
+                        </td>
+                      )
+                    }
+
+                    case 'effectiveInterestRate': {
+                      return (
+                        <td key={col.key} className={cn('px-4 py-3', rowBg)}>
+                          {MortgageCalculator.formatPercent(comp.effectiveInterestRate)}
                         </td>
                       )
                     }
