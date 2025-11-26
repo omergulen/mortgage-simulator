@@ -8,6 +8,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
+import { convertToCSV, downloadCSV } from '@/lib/utils/csv-export'
 
 interface DetailedViewProps {
   comparisons: ComparisonResult[]
@@ -317,7 +320,28 @@ export function DetailedView({ comparisons }: DetailedViewProps) {
       {/* Amortization Schedule */}
       <Card>
         <CardHeader>
-          <CardTitle className="sticky top-0 bg-card z-10">Amortization Schedule</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="sticky top-0 bg-card z-10">Amortization Schedule</CardTitle>
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              const headers = ['Year', 'Month', 'Balance', 'Interest', 'Principal', 'Extra', 'Total Payment']
+              const csvData = amortization.schedule.map((entry) => ({
+                'Year': entry.year,
+                'Month': entry.month,
+                'Balance': entry.balance,
+                'Interest': entry.interestPayment,
+                'Principal': entry.principalPayment,
+                'Extra': entry.extraPayment,
+                'Total Payment': entry.totalPayment,
+              }))
+              const csvContent = convertToCSV(csvData, headers)
+              const timestamp = new Date().toISOString().split('T')[0]
+              const scenarioName = scenario.name.replace(/[^a-zA-Z0-9]/g, '-')
+              downloadCSV(csvContent, `amortization-${scenarioName}-${timestamp}.csv`)
+            }}>
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-auto max-h-[600px]">

@@ -3,11 +3,12 @@ import type React from 'react'
 import { useMortgageStore } from '@/lib/stores/mortgage-store'
 import { MortgageCalculator, type ComparisonResult } from '@/lib/mortgage-calculator'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, ArrowUp, ArrowDown, Settings2, GripVertical, Filter } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Settings2, GripVertical, Filter, Download } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { convertToCSV, downloadCSV } from '@/lib/utils/csv-export'
 
 interface ComparisonTableProps {
   comparisons: ComparisonResult[]
@@ -224,6 +225,43 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
     setDraggedIndex(null)
   }
 
+  // Export current table view to CSV
+  const handleExportCSV = () => {
+    // Get column headers
+    const headers = columns.map((col) => col.label)
+    
+    // Convert data to CSV format
+    const csvData = sortedComparisons.map((comp) => {
+      const row: Record<string, unknown> = {}
+      columns.forEach((col) => {
+        const value = comp[col.key]
+        
+        // Handle different column types
+        if (value === null || value === undefined) {
+          row[col.label] = ''
+        } else if (typeof value === 'number') {
+          // For rates and years, format with 2 decimals
+          if (col.key.includes('Rate') || col.key.includes('Years')) {
+            row[col.label] = value.toFixed(2)
+          } else {
+            // For currency values, store as number (Excel/Sheets will format)
+            row[col.label] = value
+          }
+        } else if (typeof value === 'string') {
+          row[col.label] = value
+        } else {
+          // Handle any other types (shouldn't happen for table columns)
+          row[col.label] = String(value)
+        }
+      })
+      return row
+    })
+    
+    const csvContent = convertToCSV(csvData, headers)
+    const timestamp = new Date().toISOString().split('T')[0]
+    downloadCSV(csvContent, `mortgage-comparison-${timestamp}.csv`)
+  }
+
   // Get scenario combinations for filter (grouped by base scenario for better organization)
   const scenarioGroups = useMemo(() => {
     const groups = new Map<string, Array<{ id: string; name: string; comp: ComparisonResult }>>()
@@ -250,6 +288,12 @@ export function ComparisonTable({ comparisons, showButtonsOnly = false }: Compar
 
   const buttonsSection = (
     <div className="flex justify-end gap-2">
+      {sortedComparisons.length > 0 && (
+        <Button variant="outline" size="sm" className="gap-2" onClick={handleExportCSV}>
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
+      )}
       {scenarioGroups.length > 0 && (
         <Popover>
           <PopoverTrigger asChild>
